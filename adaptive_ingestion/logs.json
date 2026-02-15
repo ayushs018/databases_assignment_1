@@ -1,0 +1,410 @@
+{
+  "username": {
+    "presence_ratio": 1.0,
+    "type_distribution": {
+      "string": 20
+    },
+    "unique_count": 20
+  },
+  "name": {
+    "presence_ratio": 0.8,
+    "type_distribution": {
+      "string": 16
+    },
+    "unique_count": 16
+  },
+  "phone": {
+    "presence_ratio": 0.3,
+    "type_distribution": {
+      "string": 6
+    },
+    "unique_count": 6
+  },
+  "device_id": {
+    "presence_ratio": 0.7,
+    "type_distribution": {
+      "string": 14
+    },
+    "unique_count": 14
+  },
+  "device_model": {
+    "presence_ratio": 0.85,
+    "type_distribution": {
+      "string": 17
+    },
+    "unique_count": 4
+  },
+  "network": {
+    "presence_ratio": 0.75,
+    "type_distribution": {
+      "string": 15
+    },
+    "unique_count": 5
+  },
+  "gps_lon": {
+    "presence_ratio": 0.15,
+    "type_distribution": {
+      "float": 3
+    },
+    "unique_count": 3
+  },
+  "altitude": {
+    "presence_ratio": 0.7,
+    "type_distribution": {
+      "float": 14
+    },
+    "unique_count": 14
+  },
+  "city": {
+    "presence_ratio": 0.6,
+    "type_distribution": {
+      "string": 12
+    },
+    "unique_count": 12
+  },
+  "country": {
+    "presence_ratio": 0.8,
+    "type_distribution": {
+      "string": 16
+    },
+    "unique_count": 16
+  },
+  "spo2": {
+    "presence_ratio": 0.9,
+    "type_distribution": {
+      "int": 18
+    },
+    "unique_count": 10
+  },
+  "weather": {
+    "presence_ratio": 0.8,
+    "type_distribution": {
+      "string": 16
+    },
+    "unique_count": 5
+  },
+  "humidity": {
+    "presence_ratio": 0.85,
+    "type_distribution": {
+      "int": 17
+    },
+    "unique_count": 17
+  },
+  "air_quality": {
+    "presence_ratio": 0.75,
+    "type_distribution": {
+      "string": 15
+    },
+    "unique_count": 3
+  },
+  "purchase_value": {
+    "presence_ratio": 1.0,
+    "type_distribution": {
+      "float": 20
+    },
+    "unique_count": 20
+  },
+  "item": {
+    "presence_ratio": 0.4,
+    "type_distribution": {
+      "string": 7,
+      "null": 1
+    },
+    "unique_count": 3
+  },
+  "payment_status": {
+    "presence_ratio": 0.55,
+    "type_distribution": {
+      "string": 11
+    },
+    "unique_count": 3
+  },
+  "subscription": {
+    "presence_ratio": 0.75,
+    "type_distribution": {
+      "string": 15
+    },
+    "unique_count": 4
+  },
+  "timezone": {
+    "presence_ratio": 1.0,
+    "type_distribution": {
+      "string": 20
+    },
+    "unique_count": 19
+  },
+  "cpu_usage": {
+    "presence_ratio": 0.65,
+    "type_distribution": {
+      "int": 13
+    },
+    "unique_count": 11
+  },
+  "ram_usage": {
+    "presence_ratio": 0.55,
+    "type_distribution": {
+      "int": 11
+    },
+    "unique_count": 11
+  },
+  "signal_strength": {
+    "presence_ratio": 0.2,
+    "type_distribution": {
+      "int": 4
+    },
+    "unique_count": 4
+  },
+  "is_background": {
+    "presence_ratio": 0.2,
+    "type_distribution": {
+      "bool": 4
+    },
+    "unique_count": 2
+  },
+  "comment": {
+    "presence_ratio": 0.3,
+    "type_distribution": {
+      "string": 6
+    },
+    "unique_count": 6
+  },
+  "metadata.sensor_data.version": {
+    "presence_ratio": 0.3,
+    "type_distribution": {
+      "numeric_string_float": 6
+    },
+    "unique_count": 1
+  },
+  "metadata.sensor_data.calibrated": {
+    "presence_ratio": 0.3,
+    "type_distribution": {
+      "bool": 6
+    },
+    "unique_count": 2
+  },
+  "metadata.sensor_data.readings": {
+    "presence_ratio": 0.3,
+    "type_distribution": {
+      "list": 6
+    },
+    "unique_count": 0
+  },
+  "metadata.is_bot": {
+    "presence_ratio": 0.2,
+    "type_distribution": {
+      "bool": 4
+    },
+    "unique_count": 2
+  },
+  "metadata.internal_id": {
+    "presence_ratio": 0.35,
+    "type_distribution": {
+      "string": 7
+    },
+    "unique_count": 7
+  },
+  "sys_ingested_at": {
+    "presence_ratio": 1.0,
+    "type_distribution": {
+      "string": 20
+    },
+    "unique_count": 20
+  },
+  "app_version": {
+    "presence_ratio": 0.5,
+    "type_distribution": {
+      "string": 10
+    },
+    "unique_count": 10
+  },
+  "speed": {
+    "presence_ratio": 0.55,
+    "type_distribution": {
+      "float": 11
+    },
+    "unique_count": 11
+  },
+  "timestamp": {
+    "presence_ratio": 0.75,
+    "type_distribution": {
+      "string": 15
+    },
+    "unique_count": 15
+  },
+  "session_id": {
+    "presence_ratio": 0.7,
+    "type_distribution": {
+      "string": 14
+    },
+    "unique_count": 14
+  },
+  "sleep_hours": {
+    "presence_ratio": 0.25,
+    "type_distribution": {
+      "float": 5
+    },
+    "unique_count": 5
+  },
+  "action": {
+    "presence_ratio": 0.5,
+    "type_distribution": {
+      "string": 10
+    },
+    "unique_count": 4
+  },
+  "language": {
+    "presence_ratio": 0.55,
+    "type_distribution": {
+      "string": 11
+    },
+    "unique_count": 11
+  },
+  "is_active": {
+    "presence_ratio": 0.3,
+    "type_distribution": {
+      "bool": 6
+    },
+    "unique_count": 2
+  },
+  "avatar_url": {
+    "presence_ratio": 0.6,
+    "type_distribution": {
+      "string": 12
+    },
+    "unique_count": 12
+  },
+  "last_seen": {
+    "presence_ratio": 0.55,
+    "type_distribution": {
+      "string": 11
+    },
+    "unique_count": 11
+  },
+  "charging": {
+    "presence_ratio": 0.35,
+    "type_distribution": {
+      "bool": 7
+    },
+    "unique_count": 2
+  },
+  "mood": {
+    "presence_ratio": 0.1,
+    "type_distribution": {
+      "string": 2
+    },
+    "unique_count": 2
+  },
+  "metadata.tags": {
+    "presence_ratio": 0.3,
+    "type_distribution": {
+      "list": 6
+    },
+    "unique_count": 0
+  },
+  "age": {
+    "presence_ratio": 0.15,
+    "type_distribution": {
+      "int": 3
+    },
+    "unique_count": 3
+  },
+  "ip_address": {
+    "presence_ratio": 0.5,
+    "type_distribution": {
+      "ip_string": 10
+    },
+    "unique_count": 10
+  },
+  "battery": {
+    "presence_ratio": 0.15,
+    "type_distribution": {
+      "int": 3
+    },
+    "unique_count": 3
+  },
+  "stress_level": {
+    "presence_ratio": 0.15,
+    "type_distribution": {
+      "string": 3
+    },
+    "unique_count": 2
+  },
+  "temperature_c": {
+    "presence_ratio": 0.6,
+    "type_distribution": {
+      "float": 12
+    },
+    "unique_count": 12
+  },
+  "email": {
+    "presence_ratio": 0.4,
+    "type_distribution": {
+      "string": 8
+    },
+    "unique_count": 8
+  },
+  "direction": {
+    "presence_ratio": 0.25,
+    "type_distribution": {
+      "string": 5
+    },
+    "unique_count": 3
+  },
+  "friends_count": {
+    "presence_ratio": 0.4,
+    "type_distribution": {
+      "int": 8
+    },
+    "unique_count": 8
+  },
+  "steps": {
+    "presence_ratio": 0.5,
+    "type_distribution": {
+      "int": 10
+    },
+    "unique_count": 10
+  },
+  "disk_usage": {
+    "presence_ratio": 0.05,
+    "type_distribution": {
+      "int": 1
+    },
+    "unique_count": 1
+  },
+  "error_code": {
+    "presence_ratio": 0.2,
+    "type_distribution": {
+      "null": 1,
+      "int": 3
+    },
+    "unique_count": 2
+  },
+  "retry_count": {
+    "presence_ratio": 0.05,
+    "type_distribution": {
+      "int": 1
+    },
+    "unique_count": 1
+  },
+  "gps_lat": {
+    "presence_ratio": 0.05,
+    "type_distribution": {
+      "float": 1
+    },
+    "unique_count": 1
+  },
+  "heart_rate": {
+    "presence_ratio": 0.15,
+    "type_distribution": {
+      "int": 3
+    },
+    "unique_count": 3
+  },
+  "postal_code": {
+    "presence_ratio": 0.05,
+    "type_distribution": {
+      "numeric_string_int": 1
+    },
+    "unique_count": 1
+  }
+}

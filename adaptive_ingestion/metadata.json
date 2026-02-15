@@ -1,0 +1,416 @@
+{
+  "username": {
+    "backend": "sql",
+    "presence_ratio": 1.0,
+    "type_distribution": {
+      "string": 20
+    }
+  },
+  "name": {
+    "backend": "mongo",
+    "presence_ratio": 0.75,
+    "type_distribution": {
+      "string": 15
+    }
+  },
+  "ip_address": {
+    "backend": "sql",
+    "presence_ratio": 0.8,
+    "type_distribution": {
+      "ip_string": 16
+    }
+  },
+  "device_id": {
+    "backend": "mongo",
+    "presence_ratio": 0.65,
+    "type_distribution": {
+      "string": 13
+    }
+  },
+  "device_model": {
+    "backend": "sql",
+    "presence_ratio": 0.9,
+    "type_distribution": {
+      "string": 18
+    }
+  },
+  "network": {
+    "backend": "mongo",
+    "presence_ratio": 0.55,
+    "type_distribution": {
+      "string": 11
+    }
+  },
+  "direction": {
+    "backend": "mongo",
+    "presence_ratio": 0.35,
+    "type_distribution": {
+      "string": 7
+    }
+  },
+  "timestamp": {
+    "backend": "sql",
+    "presence_ratio": 0.9,
+    "type_distribution": {
+      "string": 18
+    }
+  },
+  "session_id": {
+    "backend": "mongo",
+    "presence_ratio": 0.7,
+    "type_distribution": {
+      "string": 14
+    }
+  },
+  "spo2": {
+    "backend": "sql",
+    "presence_ratio": 0.9,
+    "type_distribution": {
+      "int": 18
+    }
+  },
+  "sleep_hours": {
+    "backend": "mongo",
+    "presence_ratio": 0.4,
+    "type_distribution": {
+      "float": 8
+    }
+  },
+  "humidity": {
+    "backend": "sql",
+    "presence_ratio": 0.8,
+    "type_distribution": {
+      "int": 16
+    }
+  },
+  "action": {
+    "backend": "sql",
+    "presence_ratio": 0.8,
+    "type_distribution": {
+      "string": 16
+    }
+  },
+  "purchase_value": {
+    "backend": "sql",
+    "presence_ratio": 1.0,
+    "type_distribution": {
+      "float": 20
+    }
+  },
+  "payment_status": {
+    "backend": "mongo",
+    "presence_ratio": 0.45,
+    "type_distribution": {
+      "string": 9
+    }
+  },
+  "subscription": {
+    "backend": "sql",
+    "presence_ratio": 0.8,
+    "type_distribution": {
+      "string": 16
+    }
+  },
+  "ram_usage": {
+    "backend": "sql",
+    "presence_ratio": 0.8,
+    "type_distribution": {
+      "int": 16
+    }
+  },
+  "error_code": {
+    "backend": "mongo",
+    "presence_ratio": 0.45,
+    "type_distribution": {
+      "int": 8,
+      "null": 1
+    }
+  },
+  "retry_count": {
+    "backend": "mongo",
+    "presence_ratio": 0.15,
+    "type_distribution": {
+      "int": 3
+    }
+  },
+  "comment": {
+    "backend": "mongo",
+    "presence_ratio": 0.5,
+    "type_distribution": {
+      "string": 10
+    }
+  },
+  "last_seen": {
+    "backend": "mongo",
+    "presence_ratio": 0.3,
+    "type_distribution": {
+      "string": 6
+    }
+  },
+  "metadata.is_bot": {
+    "backend": "mongo",
+    "presence_ratio": 0.1,
+    "type_distribution": {
+      "bool": 2
+    }
+  },
+  "sys_ingested_at": {
+    "backend": "sql",
+    "presence_ratio": 1.0,
+    "type_distribution": {
+      "string": 20
+    }
+  },
+  "email": {
+    "backend": "mongo",
+    "presence_ratio": 0.15,
+    "type_distribution": {
+      "string": 3
+    }
+  },
+  "phone": {
+    "backend": "mongo",
+    "presence_ratio": 0.25,
+    "type_distribution": {
+      "string": 5
+    }
+  },
+  "altitude": {
+    "backend": "mongo",
+    "presence_ratio": 0.5,
+    "type_distribution": {
+      "float": 10
+    }
+  },
+  "city": {
+    "backend": "mongo",
+    "presence_ratio": 0.65,
+    "type_distribution": {
+      "string": 13
+    }
+  },
+  "country": {
+    "backend": "sql",
+    "presence_ratio": 0.85,
+    "type_distribution": {
+      "string": 17
+    }
+  },
+  "mood": {
+    "backend": "mongo",
+    "presence_ratio": 0.2,
+    "type_distribution": {
+      "string": 4
+    }
+  },
+  "weather": {
+    "backend": "sql",
+    "presence_ratio": 0.85,
+    "type_distribution": {
+      "string": 17
+    }
+  },
+  "air_quality": {
+    "backend": "mongo",
+    "presence_ratio": 0.7,
+    "type_distribution": {
+      "string": 14
+    }
+  },
+  "timezone": {
+    "backend": "mongo",
+    "presence_ratio": 0.75,
+    "type_distribution": {
+      "string": 15
+    }
+  },
+  "avatar_url": {
+    "backend": "mongo",
+    "presence_ratio": 0.55,
+    "type_distribution": {
+      "string": 11
+    }
+  },
+  "friends_count": {
+    "backend": "mongo",
+    "presence_ratio": 0.4,
+    "type_distribution": {
+      "int": 8
+    }
+  },
+  "gps_lon": {
+    "backend": "mongo",
+    "presence_ratio": 0.3,
+    "type_distribution": {
+      "float": 6
+    }
+  },
+  "steps": {
+    "backend": "mongo",
+    "presence_ratio": 0.2,
+    "type_distribution": {
+      "int": 4
+    }
+  },
+  "language": {
+    "backend": "mongo",
+    "presence_ratio": 0.6,
+    "type_distribution": {
+      "string": 12
+    }
+  },
+  "is_active": {
+    "backend": "mongo",
+    "presence_ratio": 0.35,
+    "type_distribution": {
+      "bool": 7
+    }
+  },
+  "app_version": {
+    "backend": "mongo",
+    "presence_ratio": 0.35,
+    "type_distribution": {
+      "string": 7
+    }
+  },
+  "postal_code": {
+    "backend": "mongo",
+    "presence_ratio": 0.15,
+    "type_distribution": {
+      "numeric_string_int": 3
+    }
+  },
+  "temperature_c": {
+    "backend": "mongo",
+    "presence_ratio": 0.6,
+    "type_distribution": {
+      "float": 12
+    }
+  },
+  "cpu_usage": {
+    "backend": "mongo",
+    "presence_ratio": 0.55,
+    "type_distribution": {
+      "int": 11
+    }
+  },
+  "signal_strength": {
+    "backend": "mongo",
+    "presence_ratio": 0.25,
+    "type_distribution": {
+      "int": 5
+    }
+  },
+  "is_background": {
+    "backend": "mongo",
+    "presence_ratio": 0.1,
+    "type_distribution": {
+      "bool": 2
+    }
+  },
+  "metadata.sensor_data.version": {
+    "backend": "mongo",
+    "presence_ratio": 0.3,
+    "type_distribution": {
+      "numeric_string_float": 6
+    }
+  },
+  "metadata.sensor_data.calibrated": {
+    "backend": "mongo",
+    "presence_ratio": 0.3,
+    "type_distribution": {
+      "bool": 6
+    }
+  },
+  "metadata.sensor_data.readings": {
+    "backend": "mongo",
+    "presence_ratio": 0.3,
+    "type_distribution": {
+      "list": 6
+    }
+  },
+  "metadata.internal_id": {
+    "backend": "mongo",
+    "presence_ratio": 0.35,
+    "type_distribution": {
+      "string": 7
+    }
+  },
+  "gps_lat": {
+    "backend": "mongo",
+    "presence_ratio": 0.2,
+    "type_distribution": {
+      "float": 4
+    }
+  },
+  "speed": {
+    "backend": "mongo",
+    "presence_ratio": 0.6,
+    "type_distribution": {
+      "float": 12
+    }
+  },
+  "charging": {
+    "backend": "mongo",
+    "presence_ratio": 0.3,
+    "type_distribution": {
+      "bool": 6
+    }
+  },
+  "heart_rate": {
+    "backend": "mongo",
+    "presence_ratio": 0.2,
+    "type_distribution": {
+      "int": 4
+    }
+  },
+  "metadata.tags": {
+    "backend": "mongo",
+    "presence_ratio": 0.25,
+    "type_distribution": {
+      "list": 5
+    }
+  },
+  "stress_level": {
+    "backend": "mongo",
+    "presence_ratio": 0.25,
+    "type_distribution": {
+      "string": 5
+    }
+  },
+  "item": {
+    "backend": "mongo",
+    "presence_ratio": 0.1,
+    "type_distribution": {
+      "string": 2
+    }
+  },
+  "age": {
+    "backend": "mongo",
+    "presence_ratio": 0.05,
+    "type_distribution": {
+      "int": 1
+    }
+  },
+  "battery": {
+    "backend": "mongo",
+    "presence_ratio": 0.1,
+    "type_distribution": {
+      "int": 2
+    }
+  },
+  "os": {
+    "backend": "mongo",
+    "presence_ratio": 0.1,
+    "type_distribution": {
+      "string": 2
+    }
+  },
+  "disk_usage": {
+    "backend": "mongo",
+    "presence_ratio": 0.1,
+    "type_distribution": {
+      "int": 2
+    }
+  }
+}
