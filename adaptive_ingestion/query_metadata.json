@@ -1,0 +1,356 @@
+{
+  "username": {
+    "backend": "sql",
+    "table": "USERS",
+    "parent": null
+  },
+  "device_model": {
+    "backend": "sql",
+    "table": "USERS",
+    "parent": null
+  },
+  "timestamp": {
+    "backend": "mongo",
+    "table": "USERS",
+    "collection": "users",
+    "parent": null
+  },
+  "spo2": {
+    "backend": "sql",
+    "table": "USERS",
+    "parent": null
+  },
+  "purchase_value": {
+    "backend": "sql",
+    "table": "USERS",
+    "parent": null
+  },
+  "timezone": {
+    "backend": "sql",
+    "table": "USERS",
+    "parent": null
+  },
+  "sys_ingested_at": {
+    "backend": "mongo",
+    "table": "USERS",
+    "collection": "users",
+    "parent": null
+  },
+  "s": {
+    "backend": "sql",
+    "table": "USERS",
+    "parent": null
+  },
+  "y": {
+    "backend": "sql",
+    "table": "USERS",
+    "parent": null
+  },
+  "_": {
+    "backend": "sql",
+    "table": "USERS",
+    "parent": null
+  },
+  "i": {
+    "backend": "sql",
+    "table": "USERS",
+    "parent": null
+  },
+  "n": {
+    "backend": "sql",
+    "table": "USERS",
+    "parent": null
+  },
+  "g": {
+    "backend": "sql",
+    "table": "USERS",
+    "parent": null
+  },
+  "e": {
+    "backend": "sql",
+    "table": "USERS",
+    "parent": null
+  },
+  "t": {
+    "backend": "sql",
+    "table": "USERS",
+    "parent": null
+  },
+  "d": {
+    "backend": "sql",
+    "table": "USERS",
+    "parent": null
+  },
+  "a": {
+    "backend": "sql",
+    "table": "USERS",
+    "parent": null
+  },
+  "phone": {
+    "backend": "mongo",
+    "collection": "users",
+    "parent": null
+  },
+  "ip_address": {
+    "backend": "mongo",
+    "collection": "users",
+    "parent": null
+  },
+  "device_id": {
+    "backend": "mongo",
+    "collection": "users",
+    "parent": null
+  },
+  "altitude": {
+    "backend": "mongo",
+    "collection": "users",
+    "parent": null
+  },
+  "speed": {
+    "backend": "mongo",
+    "collection": "users",
+    "parent": null
+  },
+  "direction": {
+    "backend": "mongo",
+    "collection": "users",
+    "parent": null
+  },
+  "city": {
+    "backend": "mongo",
+    "collection": "users",
+    "parent": null
+  },
+  "country": {
+    "backend": "sql",
+    "collection": "users",
+    "table": "USERS",
+    "parent": null
+  },
+  "session_id": {
+    "backend": "mongo",
+    "collection": "users",
+    "parent": null
+  },
+  "steps": {
+    "backend": "mongo",
+    "collection": "users",
+    "parent": null
+  },
+  "temperature_c": {
+    "backend": "mongo",
+    "collection": "users",
+    "parent": null
+  },
+  "humidity": {
+    "backend": "mongo",
+    "collection": "users",
+    "parent": null
+  },
+  "air_quality": {
+    "backend": "mongo",
+    "collection": "users",
+    "parent": null
+  },
+  "item": {
+    "backend": "mongo",
+    "collection": "users",
+    "parent": null
+  },
+  "payment_status": {
+    "backend": "mongo",
+    "collection": "users",
+    "parent": null
+  },
+  "language": {
+    "backend": "mongo",
+    "collection": "users",
+    "parent": null
+  },
+  "ram_usage": {
+    "backend": "mongo",
+    "collection": "users",
+    "parent": null
+  },
+  "error_code": {
+    "backend": "mongo",
+    "collection": "users",
+    "parent": null
+  },
+  "comment": {
+    "backend": "mongo",
+    "collection": "users",
+    "parent": null
+  },
+  "avatar_url": {
+    "backend": "mongo",
+    "collection": "users",
+    "parent": null
+  },
+  "last_seen": {
+    "backend": "mongo",
+    "collection": "users",
+    "parent": null
+  },
+  "_id": {
+    "backend": "mongo",
+    "collection": "users",
+    "parent": null
+  },
+  "weather": {
+    "backend": "sql",
+    "table": "USERS",
+    "parent": null
+  },
+  "subscription": {
+    "backend": "mongo",
+    "table": "USERS",
+    "collection": "users",
+    "parent": null
+  },
+  "name": {
+    "backend": "mongo",
+    "collection": "users",
+    "parent": null
+  },
+  "action": {
+    "backend": "mongo",
+    "collection": "users",
+    "parent": null
+  },
+  "friends_count": {
+    "backend": "mongo",
+    "collection": "users",
+    "parent": null
+  },
+  "app_version": {
+    "backend": "mongo",
+    "collection": "users",
+    "parent": null
+  },
+  "cpu_usage": {
+    "backend": "mongo",
+    "collection": "users",
+    "parent": null
+  },
+  "disk_usage": {
+    "backend": "mongo",
+    "collection": "users",
+    "parent": null
+  },
+  "email": {
+    "backend": "mongo",
+    "collection": "users",
+    "parent": null
+  },
+  "os": {
+    "backend": "mongo",
+    "collection": "users",
+    "parent": null
+  },
+  "charging": {
+    "backend": "mongo",
+    "collection": "users",
+    "parent": null
+  },
+  "sleep_hours": {
+    "backend": "mongo",
+    "collection": "users",
+    "parent": null
+  },
+  "signal_strength": {
+    "backend": "mongo",
+    "collection": "users",
+    "parent": null
+  },
+  "is_active": {
+    "backend": "mongo",
+    "collection": "users",
+    "parent": null
+  },
+  "metadata.sensor_data.version": {
+    "backend": "mongo",
+    "collection": "users",
+    "parent": null
+  },
+  "metadata.sensor_data.calibrated": {
+    "backend": "mongo",
+    "collection": "users",
+    "parent": null
+  },
+  "metadata.sensor_data.readings": {
+    "backend": "mongo",
+    "collection": "users",
+    "parent": null
+  },
+  "metadata.tags": {
+    "backend": "mongo",
+    "collection": "users",
+    "parent": null
+  },
+  "metadata.is_bot": {
+    "backend": "mongo",
+    "collection": "users",
+    "parent": null
+  },
+  "network": {
+    "backend": "mongo",
+    "collection": "users",
+    "parent": null
+  },
+  "gps_lon": {
+    "backend": "mongo",
+    "collection": "users",
+    "parent": null
+  },
+  "is_background": {
+    "backend": "mongo",
+    "collection": "users",
+    "parent": null
+  },
+  "metadata.internal_id": {
+    "backend": "mongo",
+    "collection": "users",
+    "parent": null
+  },
+  "postal_code": {
+    "backend": "mongo",
+    "collection": "users",
+    "parent": null
+  },
+  "mood": {
+    "backend": "mongo",
+    "collection": "users",
+    "parent": null
+  },
+  "retry_count": {
+    "backend": "mongo",
+    "collection": "users",
+    "parent": null
+  },
+  "stress_level": {
+    "backend": "mongo",
+    "collection": "users",
+    "parent": null
+  },
+  "gps_lat": {
+    "backend": "mongo",
+    "collection": "users",
+    "parent": null
+  },
+  "heart_rate": {
+    "backend": "mongo",
+    "collection": "users",
+    "parent": null
+  },
+  "age": {
+    "backend": "mongo",
+    "collection": "users",
+    "parent": null
+  },
+  "battery": {
+    "backend": "mongo",
+    "collection": "users",
+    "parent": null
+  }
+}

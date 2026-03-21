@@ -13,7 +13,7 @@ from mongo_backend import insert_mongo
 
 
 
-STREAM_URL = "http://127.0.0.1:8000/record/20"
+STREAM_URL = "http://127.0.0.1:8000/record/40"
 metadata = load_metadata()
 
 
@@ -40,15 +40,12 @@ def main():
     for field, info in summary.items():
         # If decision already exists, reuse it
         print (info)  
-        if field in metadata:
-            backend = metadata[field]["backend"]
-        else:
-            backend = decide_backend(field, info)
-            metadata[field] = {
-                "backend": backend,
-                "presence_ratio": info["presence_ratio"],
-                "type_distribution": info["type_distribution"]
-            }
+        backend = decide_backend(field, info)
+        metadata[field] = {
+            "backend": backend,
+            "presence_ratio": info["presence_ratio"],
+            "type_distribution": info["type_distribution"]
+        }
 
         print(f"{field} -> {backend.upper()}")
 
@@ -68,18 +65,16 @@ def main():
                 mongo_fields.append(field)
 
         # ensure join keys in both
-        for key in ("username", "sys_ingested_at"):
+        for key in ("sys_ingested_at"):
             if key not in sql_fields:
                 sql_fields.append(key)
             if key not in mongo_fields:
                 mongo_fields.append(key)
 
-        # insert_sql(normalized_record, sql_fields)
-        # insert_mongo(normalized_record, mongo_fields)
-
+        insert_sql(normalized_record, sql_fields)
+        insert_mongo(normalized_record, mongo_fields)
     with open("logs.json", "w") as f:
         json.dump(summary, f, indent=2)
-
 
 
 
