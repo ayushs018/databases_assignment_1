@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SADF – Logical Dashboard</title>
+    <meta name="description" content="Self-Adaptive Database Framework: Logical Dashboard for IoT Smart Campus">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+
+<body>
+
+    <!-- ── HEADER ──────────────────────────────────────────────── -->
+    <header id="app-header">
+        <div class="header-left">
+            <div class="logo-icon">⬡</div>
+            <div>
+                <h1>SADF Dashboard</h1>
+                <p class="subtitle" id="session-subtitle">Session loading…</p>
+            </div>
+        </div>
+        <div class="header-right">
+            <div class="global-search-wrap">
+                <span class="icon">🔍</span>
+                <input type="text" id="global-search" placeholder="Search across all entities..."
+                    title="Natural Search: Find anything by keyword">
+            </div>
+            <span class="badge" id="session-badge">—</span>
+            <button class="btn-icon" id="btn-metadata" title="View Metadata">⚙</button>
+        </div>
+    </header>
+
+    <div id="app-body">
+
+        <!-- ── SIDEBAR ────────────────────────────────────────────── -->
+        <aside id="sidebar">
+            <div class="sidebar-section">
+                <h3>Logical Entities</h3>
+                <ul id="entity-list"></ul>
+            </div>
+            <div class="sidebar-section">
+                <h3>Tools</h3>
+                <button class="sidebar-btn" id="btn-query-panel">
+                    <span class="icon">⟐</span> JSON Query
+                </button>
+                <button class="sidebar-btn" id="btn-acid-panel">
+                    <span class="icon">⚗</span> ACID Tests
+                </button>
+                <a href="/docs" class="sidebar-btn" style="text-decoration:none">
+                    <span class="icon">📖</span> Documentation
+                </a>
+            </div>
+        </aside>
+
+        <!-- ── MAIN CONTENT ───────────────────────────────────────── -->
+        <main id="main-content">
+
+            <!-- Data View -->
+            <section id="data-view" class="panel">
+                <div class="panel-header">
+                    <h2 id="entity-title">Select an entity</h2>
+                    <div class="panel-actions">
+                        <input type="text" id="search-input" placeholder="Search…" class="input-sm">
+                        <button class="btn btn-primary" id="btn-create">+ New Record</button>
+                    </div>
+                </div>
+                <div class="table-wrap">
+                    <table id="data-table">
+                        <thead>
+                            <tr id="table-head"></tr>
+                        </thead>
+                        <tbody id="table-body"></tbody>
+                    </table>
+                    <div id="empty-state" class="empty-state">
+                        <p>Choose an entity from the sidebar to view its data.</p>
+                    </div>
+                </div>
+            </section>
+
+            <!-- JSON Query Panel -->
+            <section id="query-panel" class="panel hidden">
+                <div class="panel-header">
+                    <h2>Logical JSON Query</h2>
+                    <button class="btn-icon close-panel" data-target="query-panel">✕</button>
+                </div>
+                <!-- Example queries bar -->
+                <div class="query-examples-bar">
+                    <span class="examples-label">Examples:</span>
+                    <button class="btn btn-sm" onclick="loadExample('simple_read')">Simple Read</button>
+                    <button class="btn btn-sm" onclick="loadExample('gt_filter')">Temp &gt; 25</button>
+                    <button class="btn btn-sm" onclick="loadExample('in_filter')">Role IN</button>
+                    <button class="btn btn-sm" onclick="loadExample('like_filter')">LIKE Pattern</button>
+                    <button class="btn btn-sm" onclick="loadExample('or_cond')">OR Condition</button>
+                    <button class="btn btn-sm" onclick="loadExample('combined')">Combined + Sort</button>
+                    <button class="btn btn-sm" onclick="loadExample('mongo_filter')">Severity Filter</button>
+                    <button class="btn btn-sm" onclick="loadExample('create_rec')">Create Record</button>
+                </div>
+                <div class="query-layout">
+                    <div class="query-input-area">
+                        <label>Query JSON</label>
+                        <textarea id="query-editor" spellcheck="false">{
+  "operation": "read",
+  "entity": "readings",
+  "fields": ["record_id", "temperature", "humidity", "timestamp"],
+  "conditions": [
+    {"field": "temperature", "op": "gt", "value": 25}
+  ],
+  "order_by": "temperature",
+  "order": "desc",
+  "limit": 5
+}</textarea>
+                        <div class="query-btn-row">
+                            <button class="btn btn-primary" id="btn-run-query">Execute Query</button>
+                            <span class="query-hint">Operators: eq, ne, gt, gte, lt, lte, like, in · Groups: {"or":
+                                [...]}, {"and": [...]}</span>
+                        </div>
+                    </div>
+                    <div class="query-result-area">
+                        <label>Result</label>
+                        <pre id="query-result">— awaiting query —</pre>
+                    </div>
+                </div>
+            </section>
+
+
+            <!-- ACID Test Panel -->
+            <section id="acid-panel" class="panel hidden">
+                <div class="panel-header">
+                    <h2>ACID Validation Tests</h2>
+                    <button class="btn-icon close-panel" data-target="acid-panel">✕</button>
+                </div>
+                <div class="acid-grid">
+                    <div class="acid-card" data-test="atomicity">
+                        <h3>Atomicity</h3>
+                        <p>All-or-nothing across both backends.</p>
+                        <div class="acid-status" id="acid-atomicity">—</div>
+                        <button class="btn btn-sm" onclick="runAcidTest('atomicity')">Run</button>
+                    </div>
+                    <div class="acid-card" data-test="consistency">
+                        <h3>Consistency</h3>
+                        <p>FK constraints prevent invalid inserts.</p>
+                        <div class="acid-status" id="acid-consistency">—</div>
+                        <button class="btn btn-sm" onclick="runAcidTest('consistency')">Run</button>
+                    </div>
+                    <div class="acid-card" data-test="isolation">
+                        <h3>Isolation</h3>
+                        <p>Concurrent writes produce consistent state.</p>
+                        <div class="acid-status" id="acid-isolation">—</div>
+                        <button class="btn btn-sm" onclick="runAcidTest('isolation')">Run</button>
+                    </div>
+                    <div class="acid-card" data-test="durability">
+                        <h3>Durability</h3>
+                        <p>Data persists after connection cycle.</p>
+                        <div class="acid-status" id="acid-durability">—</div>
+                        <button class="btn btn-sm" onclick="runAcidTest('durability')">Run</button>
+                    </div>
+                </div>
+                <button class="btn btn-primary" style="margin-top:1rem" onclick="runAcidTest('all')">Run All
+                    Tests</button>
+            </section>
+
+        </main>
+    </div>
+
+    <!-- ── MODAL: Create / Edit ────────────────────────────────── -->
+    <div id="modal-overlay" class="modal-overlay hidden">
+        <div class="modal" id="crud-modal">
+            <div class="modal-header">
+                <h3 id="modal-title">New Record</h3>
+                <button class="btn-icon" id="modal-close">✕</button>
+            </div>
+            <form id="crud-form"></form>
+            <div class="modal-footer">
+                <button class="btn" id="modal-cancel">Cancel</button>
+                <button class="btn btn-primary" id="modal-save">Save</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ── MODAL: Metadata Viewer ──────────────────────────────── -->
+    <div id="meta-overlay" class="modal-overlay hidden">
+        <div class="modal modal-lg">
+            <div class="modal-header">
+                <h3>Metadata – Field Routing Map</h3>
+                <button class="btn-icon" id="meta-close">✕</button>
+            </div>
+            <pre id="meta-content" class="meta-pre"></pre>
+        </div>
+    </div>
+
+    <!-- ── TOAST ───────────────────────────────────────────────── -->
+    <div id="toast-container"></div>
+
+    <script src="/static/app.js"></script>
+</body>
+
+</html>

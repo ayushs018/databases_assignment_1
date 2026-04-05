@@ -6,7 +6,9 @@ DB_NAME = "hybrid.db"
 
 # SINGLE CONNECTION CREATOR
 def get_connection():
-    conn = sqlite3.connect(DB_NAME, timeout=10)
+    # Flask's dev server may handle requests on different threads.
+    # Allow using the connection across threads (we still create/close per request in app.py).
+    conn = sqlite3.connect(DB_NAME, timeout=10, check_same_thread=False)
     conn.execute("PRAGMA journal_mode=WAL;")
     return conn
 

@@ -17,7 +17,7 @@ with open("query_metadata.json") as f:
 # =========================
 
 # SQLite
-sql_conn = sqlite3.connect("hybrid.db")
+sql_conn = sqlite3.connect("hybrid.db", check_same_thread=False)
 
 
 # MongoDB
@@ -71,7 +71,7 @@ def test_update():
         "fields": ["spo2"],
         "filters": {
             "username": "linda37",
-            "spo2": 100,
+            "timezone": "US",
         },
         "data": {
             "username": "AYush",
@@ -86,8 +86,8 @@ def test_delete_field():
 
     query = {
         "operation": "delete",
-        "fields": ["spo2"],
-        "filters": {"username": "AYush"}
+        "fields": ["timezone"],
+        "filters": {"username": "karen62"}
     }
 
     print(engine.execute(query))
@@ -98,7 +98,7 @@ def test_delete_row():
 
     query = {
         "operation": "delete",
-        "filters": {"username": "nicholsonmatthew", "spo2": "96"}
+        "filters": {"username": "AYush"}
     }
 
     print(engine.execute(query))
@@ -115,4 +115,9 @@ if __name__ == "__main__":
     # test_read()
     # test_delete_field()
     # test_delete_row()
-    test_read()
+    # test_read()
+
+    # print (engine.test_durability())
+    # print (engine.test_isolation())
+    # print (engine.test_consistency())
+    print (engine.test_atomicity())

@@ -1,0 +1,905 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SADF – Documentation</title>
+    <meta name="description" content="Documentation for the Self-Adaptive Database Framework query system">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="/static/style.css">
+    <style>
+        /* ── Docs-specific overrides ─────────────────────────── */
+        #app-body {
+            overflow-y: auto;
+        }
+
+        .docs-container {
+            max-width: 920px;
+            margin: 0 auto;
+            padding: 2rem 2.5rem 4rem;
+        }
+
+        .docs-container h1 {
+            font-size: 1.6rem;
+            font-weight: 700;
+            color: var(--text-bright);
+            margin-bottom: 0.25rem;
+        }
+
+        .docs-container .lead {
+            color: var(--text-dim);
+            font-size: 0.88rem;
+            margin-bottom: 2rem;
+        }
+
+        .docs-container h2 {
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: var(--accent);
+            margin-top: 2.5rem;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.4rem;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .docs-container h3 {
+            font-size: 0.92rem;
+            font-weight: 600;
+            color: var(--text-bright);
+            margin-top: 1.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .docs-container p,
+        .docs-container li {
+            font-size: 0.84rem;
+            line-height: 1.7;
+            color: var(--text);
+        }
+
+        .docs-container ul,
+        .docs-container ol {
+            padding-left: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .docs-container li {
+            margin-bottom: 0.3rem;
+        }
+
+        .docs-container code {
+            font-family: var(--mono);
+            font-size: 0.78rem;
+            background: rgba(91, 156, 245, 0.08);
+            color: var(--accent);
+            padding: 2px 6px;
+            border-radius: 4px;
+        }
+
+        .docs-container pre {
+            background: var(--bg-surface);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-sm);
+            padding: 1rem 1.25rem;
+            overflow-x: auto;
+            font-family: var(--mono);
+            font-size: 0.76rem;
+            line-height: 1.6;
+            color: var(--text);
+            margin: 0.75rem 0 1.25rem;
+        }
+
+        .docs-container pre .kw {
+            color: var(--accent);
+        }
+
+        .docs-container pre .str {
+            color: var(--green);
+        }
+
+        .docs-container pre .num {
+            color: var(--amber);
+        }
+
+        .docs-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.8rem;
+            margin: 0.75rem 0 1.25rem;
+        }
+
+        .docs-table th {
+            text-align: left;
+            padding: 0.55rem 0.9rem;
+            background: rgba(0, 0, 0, 0.2);
+            color: var(--text-dim);
+            font-size: 0.7rem;
+            text-transform: uppercase;
+            letter-spacing: 0.06em;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .docs-table td {
+            padding: 0.5rem 0.9rem;
+            border-bottom: 1px solid var(--border);
+            color: var(--text);
+        }
+
+        .docs-table tr:hover td {
+            background: rgba(91, 156, 245, 0.03);
+        }
+
+        .schema-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 1rem 1.25rem;
+            margin-bottom: 0.75rem;
+        }
+
+        .schema-card h4 {
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: var(--text-bright);
+            margin-bottom: 0.4rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .schema-card h4 .tag {
+            font-size: 0.62rem;
+            padding: 2px 8px;
+            border-radius: 100px;
+            font-weight: 500;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .tag-sql {
+            background: rgba(91, 156, 245, 0.15);
+            color: var(--accent);
+        }
+
+        .tag-mongo {
+            background: rgba(69, 212, 138, 0.15);
+            color: var(--green);
+        }
+
+        .tag-both {
+            background: rgba(240, 178, 58, 0.15);
+            color: var(--amber);
+        }
+
+        .schema-card .desc {
+            font-size: 0.76rem;
+            color: var(--text-dim);
+            margin-bottom: 0.5rem;
+        }
+
+        .schema-card .fields {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.35rem;
+        }
+
+        .schema-card .field-chip {
+            font-family: var(--mono);
+            font-size: 0.7rem;
+            padding: 3px 8px;
+            border-radius: 4px;
+            background: rgba(0, 0, 0, 0.2);
+            color: var(--text);
+            border: 1px solid var(--border);
+        }
+
+        .field-chip.sql {
+            border-color: rgba(91, 156, 245, 0.3);
+        }
+
+        .field-chip.mongo {
+            border-color: rgba(69, 212, 138, 0.3);
+        }
+
+        .field-chip.global {
+            border-color: rgba(240, 178, 58, 0.4);
+            color: var(--amber);
+        }
+
+        .toc {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 1rem 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .toc h3 {
+            margin-top: 0;
+            font-size: 0.8rem;
+            color: var(--text-dim);
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+        }
+
+        .toc ol {
+            padding-left: 1.2rem;
+            margin: 0;
+        }
+
+        .toc li {
+            margin-bottom: 0.2rem;
+        }
+
+        .toc a {
+            color: var(--accent);
+            text-decoration: none;
+            font-size: 0.82rem;
+        }
+
+        .toc a:hover {
+            text-decoration: underline;
+        }
+
+        .back-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.4rem;
+            color: var(--accent);
+            text-decoration: none;
+            font-size: 0.82rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .back-link:hover {
+            text-decoration: underline;
+        }
+
+        .example-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+            margin: 1rem 0;
+        }
+
+        @media (max-width: 768px) {
+            .example-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .example-card {
+            background: var(--bg-surface);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-sm);
+            padding: 0.85rem 1rem;
+        }
+
+        .example-card h4 {
+            font-size: 0.78rem;
+            color: var(--text-bright);
+            margin-bottom: 0.4rem;
+        }
+
+        .example-card pre {
+            margin: 0;
+            font-size: 0.72rem;
+            border: none;
+            padding: 0.6rem;
+        }
+    </style>
+</head>
+
+<body>
+
+    <!-- ── HEADER ──────────────────────────────────────────────── -->
+    <header id="app-header">
+        <div class="header-left">
+            <div class="logo-icon">⬡</div>
+            <div>
+                <h1>SADF Dashboard</h1>
+                <p class="subtitle">Documentation</p>
+            </div>
+        </div>
+        <div class="header-right">
+            <a href="/" class="btn btn-sm" style="text-decoration:none">← Back to Dashboard</a>
+        </div>
+    </header>
+
+    <div id="app-body">
+        <div class="docs-container">
+
+            <a href="/" class="back-link">← Dashboard</a>
+            <h1>Documentation</h1>
+            <p class="lead">Complete reference for the Self-Adaptive Database Framework — data model, query syntax,
+                operators, and response formats.</p>
+
+            <!-- ── TABLE OF CONTENTS ──────────────────────────────── -->
+            <div class="toc">
+                <h3>Contents</h3>
+                <ol>
+                    <li><a href="#architecture">Architecture Overview</a></li>
+                    <li><a href="#entities">Entities &amp; Data Model</a></li>
+                    <li><a href="#global-key">Global Linking Key</a></li>
+                    <li><a href="#query-format">Query JSON Format</a></li>
+                    <li><a href="#operators">Filter Operators</a></li>
+                    <li><a href="#logical-groups">Logical Groups (AND / OR)</a></li>
+                    <li><a href="#sorting-limiting">Sorting &amp; Limiting</a></li>
+                    <li><a href="#crud-ops">CRUD Operations</a></li>
+                    <li><a href="#examples">Example Queries</a></li>
+                    <li><a href="#api-endpoints">REST API Endpoints</a></li>
+                    <li><a href="#response-format">Response Format</a></li>
+                    <li><a href="#acid">ACID Validation</a></li>
+                </ol>
+            </div>
+
+            <!-- ── 1. ARCHITECTURE ─────────────────────────────────── -->
+            <h2 id="architecture">1. Architecture Overview</h2>
+            <p>SADF uses <strong>two SQLite backends</strong> to simulate a hybrid SQL + MongoDB storage system:</p>
+            <table class="docs-table">
+                <tr>
+                    <th>Backend</th>
+                    <th>File</th>
+                    <th>Stores</th>
+                    <th>Style</th>
+                </tr>
+                <tr>
+                    <td><code>sql.db</code></td>
+                    <td>SQL (relational)</td>
+                    <td>Structured, stable fields</td>
+                    <td>Normalised tables with FKs</td>
+                </tr>
+                <tr>
+                    <td><code>mongo.db</code></td>
+                    <td>MongoDB (document)</td>
+                    <td>Semi-structured, variable fields</td>
+                    <td>JSON blobs in a <code>documents</code> table</td>
+                </tr>
+            </table>
+            <p>A <strong>Metadata Manager</strong> holds a JSON routing map that tells the engine which fields live in
+                which backend. Users never see table names, collection names, or physical storage — only <em>logical
+                    entities</em>.</p>
+
+            <!-- ── 2. ENTITIES ──────────────────────────────────────── -->
+            <h2 id="entities">2. Entities &amp; Data Model</h2>
+            <p>The system manages six logical entities for the <strong>IoT Smart Campus</strong> scenario:</p>
+
+            <div class="schema-card">
+                <h4>users <span class="tag tag-sql">SQL</span></h4>
+                <p class="desc">Campus system users — students, staff, administrators.</p>
+                <div class="fields">
+                    <span class="field-chip sql">user_id (PK)</span>
+                    <span class="field-chip sql">username (UNIQUE)</span>
+                    <span class="field-chip sql">email</span>
+                    <span class="field-chip sql">role</span>
+                </div>
+            </div>
+
+            <div class="schema-card">
+                <h4>sensors <span class="tag tag-sql">SQL</span></h4>
+                <p class="desc">IoT sensors deployed across campus locations.</p>
+                <div class="fields">
+                    <span class="field-chip sql">sensor_id (PK)</span>
+                    <span class="field-chip sql">user_id (FK→users)</span>
+                    <span class="field-chip sql">location</span>
+                    <span class="field-chip sql">sensor_type</span>
+                    <span class="field-chip sql">status</span>
+                </div>
+            </div>
+
+            <div class="schema-card">
+                <h4>readings <span class="tag tag-both">SQL + MONGO</span></h4>
+                <p class="desc">Structured sensor readings merged with semi-structured event data via
+                    <code>record_id</code>.</p>
+                <div class="fields">
+                    <span class="field-chip sql">reading_id (PK)</span>
+                    <span class="field-chip sql">sensor_id (FK→sensors)</span>
+                    <span class="field-chip global">record_id (GLOBAL)</span>
+                    <span class="field-chip sql">timestamp</span>
+                    <span class="field-chip sql">temperature</span>
+                    <span class="field-chip sql">humidity</span>
+                </div>
+            </div>
+
+            <div class="schema-card">
+                <h4>sensor_events <span class="tag tag-mongo">MONGO</span></h4>
+                <p class="desc">Variable-payload sensor events — alerts, spikes, drops.</p>
+                <div class="fields">
+                    <span class="field-chip global">record_id (GLOBAL)</span>
+                    <span class="field-chip mongo">event_type</span>
+                    <span class="field-chip mongo">payload (JSON)</span>
+                    <span class="field-chip mongo">severity</span>
+                    <span class="field-chip mongo">tags (JSON array)</span>
+                </div>
+            </div>
+
+            <div class="schema-card">
+                <h4>logs <span class="tag tag-mongo">MONGO</span></h4>
+                <p class="desc">System and access logs with free-form JSON context.</p>
+                <div class="fields">
+                    <span class="field-chip global">record_id (GLOBAL)</span>
+                    <span class="field-chip mongo">log_level</span>
+                    <span class="field-chip mongo">source</span>
+                    <span class="field-chip mongo">message</span>
+                    <span class="field-chip mongo">context (JSON)</span>
+                </div>
+            </div>
+
+            <div class="schema-card">
+                <h4>alerts <span class="tag tag-mongo">MONGO</span></h4>
+                <p class="desc">Threshold-triggered alerts from sensors.</p>
+                <div class="fields">
+                    <span class="field-chip global">record_id (GLOBAL)</span>
+                    <span class="field-chip mongo">alert_type</span>
+                    <span class="field-chip mongo">triggered_by</span>
+                    <span class="field-chip mongo">details (JSON)</span>
+                    <span class="field-chip mongo">resolved</span>
+                </div>
+            </div>
+
+            <!-- ── 3. GLOBAL KEY ───────────────────────────────────── -->
+            <h2 id="global-key">3. Global Linking Key</h2>
+            <p>The field <code>record_id</code> is a UUID-based identifier present in <strong>both</strong> databases.
+                It serves as the cross-database join key that lets the engine merge SQL and Mongo data into a single
+                logical record.</p>
+            <ul>
+                <li>Auto-generated on <code>create</code> if not provided</li>
+                <li>Used as the key for <code>update</code> and <code>delete</code> operations</li>
+                <li>Appears in every entity across both backends</li>
+            </ul>
+
+            <!-- ── 4. QUERY FORMAT ─────────────────────────────────── -->
+            <h2 id="query-format">4. Query JSON Format</h2>
+            <p>All queries are submitted as JSON objects with the following structure:</p>
+            <pre>{
+  <span class="str">"operation"</span>:  <span class="str">"read"</span> | <span class="str">"create"</span> | <span class="str">"update"</span> | <span class="str">"delete"</span>,
+  <span class="str">"entity"</span>:     <span class="str">"entity_name"</span>,
+
+  // ─── Read-specific fields ───
+  <span class="str">"fields"</span>:     [<span class="str">"field1"</span>, <span class="str">"field2"</span>],       <span style="color:var(--text-dim)">// select specific fields</span>
+  <span class="str">"filters"</span>:    {<span class="str">"field"</span>: <span class="str">"value"</span>},          <span style="color:var(--text-dim)">// simple equality</span>
+  <span class="str">"conditions"</span>: [ ... ],                   <span style="color:var(--text-dim)">// rich conditional filters</span>
+  <span class="str">"order_by"</span>:   <span class="str">"field_name"</span>,              <span style="color:var(--text-dim)">// sort by field</span>
+  <span class="str">"order"</span>:      <span class="str">"asc"</span> | <span class="str">"desc"</span>,            <span style="color:var(--text-dim)">// sort direction</span>
+  <span class="str">"limit"</span>:      <span class="num">10</span>,                        <span style="color:var(--text-dim)">// max results</span>
+
+  // ─── Write-specific fields ───
+  <span class="str">"data"</span>:       { ... }                     <span style="color:var(--text-dim)">// for create / update</span>
+}</pre>
+
+            <h3>Required Fields</h3>
+            <table class="docs-table">
+                <tr>
+                    <th>Field</th>
+                    <th>Required For</th>
+                    <th>Description</th>
+                </tr>
+                <tr>
+                    <td><code>operation</code></td>
+                    <td>All</td>
+                    <td>One of: <code>read</code>, <code>create</code>, <code>update</code>, <code>delete</code></td>
+                </tr>
+                <tr>
+                    <td><code>entity</code></td>
+                    <td>All</td>
+                    <td>Logical entity name (e.g., <code>users</code>, <code>readings</code>)</td>
+                </tr>
+                <tr>
+                    <td><code>data</code></td>
+                    <td>create, update</td>
+                    <td>Key-value pairs for the record</td>
+                </tr>
+                <tr>
+                    <td><code>filters.record_id</code></td>
+                    <td>update, delete</td>
+                    <td>Identifies which record to modify</td>
+                </tr>
+            </table>
+
+            <!-- ── 5. OPERATORS ─────────────────────────────────────── -->
+            <h2 id="operators">5. Filter Operators</h2>
+            <p>Each condition in the <code>conditions</code> array is an object with three keys:</p>
+            <pre>{<span class="str">"field"</span>: <span class="str">"field_name"</span>, <span class="str">"op"</span>: <span class="str">"operator"</span>, <span class="str">"value"</span>: <span class="kw">value</span>}</pre>
+
+            <table class="docs-table">
+                <tr>
+                    <th>Operator</th>
+                    <th>SQL Equivalent</th>
+                    <th>Description</th>
+                    <th>Example</th>
+                </tr>
+                <tr>
+                    <td><code>eq</code></td>
+                    <td><code>=</code></td>
+                    <td>Equals</td>
+                    <td><code>{"field": "role", "op": "eq", "value": "admin"}</code></td>
+                </tr>
+                <tr>
+                    <td><code>ne</code></td>
+                    <td><code>!=</code></td>
+                    <td>Not equals</td>
+                    <td><code>{"field": "role", "op": "ne", "value": "student"}</code></td>
+                </tr>
+                <tr>
+                    <td><code>gt</code></td>
+                    <td><code>&gt;</code></td>
+                    <td>Greater than</td>
+                    <td><code>{"field": "temperature", "op": "gt", "value": 25}</code></td>
+                </tr>
+                <tr>
+                    <td><code>gte</code></td>
+                    <td><code>&gt;=</code></td>
+                    <td>Greater or equal</td>
+                    <td><code>{"field": "humidity", "op": "gte", "value": 60}</code></td>
+                </tr>
+                <tr>
+                    <td><code>lt</code></td>
+                    <td><code>&lt;</code></td>
+                    <td>Less than</td>
+                    <td><code>{"field": "temperature", "op": "lt", "value": 30}</code></td>
+                </tr>
+                <tr>
+                    <td><code>lte</code></td>
+                    <td><code>&lt;=</code></td>
+                    <td>Less or equal</td>
+                    <td><code>{"field": "humidity", "op": "lte", "value": 70}</code></td>
+                </tr>
+                <tr>
+                    <td><code>like</code></td>
+                    <td><code>LIKE</code></td>
+                    <td>Pattern match (<code>%</code> = any chars, <code>_</code> = one char)</td>
+                    <td><code>{"field": "username", "op": "like", "value": "%ali%"}</code></td>
+                </tr>
+                <tr>
+                    <td><code>in</code></td>
+                    <td><code>IN (...)</code></td>
+                    <td>Set membership</td>
+                    <td><code>{"field": "role", "op": "in", "value": ["admin", "staff"]}</code></td>
+                </tr>
+            </table>
+
+            <!-- ── 6. LOGICAL GROUPS ───────────────────────────────── -->
+            <h2 id="logical-groups">6. Logical Groups (AND / OR)</h2>
+
+            <h3>Default: AND</h3>
+            <p>Multiple conditions in the top-level <code>conditions</code> array are combined with
+                <strong>AND</strong>:</p>
+            <pre>{
+  <span class="str">"conditions"</span>: [
+    {<span class="str">"field"</span>: <span class="str">"temperature"</span>, <span class="str">"op"</span>: <span class="str">"gte"</span>, <span class="str">"value"</span>: <span class="num">22</span>},
+    {<span class="str">"field"</span>: <span class="str">"humidity"</span>,    <span class="str">"op"</span>: <span class="str">"lt"</span>,  <span class="str">"value"</span>: <span class="num">65</span>}
+  ]
+}
+<span style="color:var(--text-dim)">// → temperature >= 22 AND humidity < 65</span></pre>
+
+            <h3>Explicit OR</h3>
+            <p>Wrap conditions in an <code>{"or": [...]}</code> object:</p>
+            <pre>{
+  <span class="str">"conditions"</span>: [
+    {<span class="str">"or"</span>: [
+      {<span class="str">"field"</span>: <span class="str">"sensor_type"</span>, <span class="str">"op"</span>: <span class="str">"eq"</span>, <span class="str">"value"</span>: <span class="str">"temperature"</span>},
+      {<span class="str">"field"</span>: <span class="str">"sensor_type"</span>, <span class="str">"op"</span>: <span class="str">"eq"</span>, <span class="str">"value"</span>: <span class="str">"humidity"</span>}
+    ]}
+  ]
+}
+<span style="color:var(--text-dim)">// → sensor_type = 'temperature' OR sensor_type = 'humidity'</span></pre>
+
+            <h3>Nesting</h3>
+            <p>Groups can be nested arbitrarily:</p>
+            <pre>{
+  <span class="str">"conditions"</span>: [
+    {<span class="str">"field"</span>: <span class="str">"temperature"</span>, <span class="str">"op"</span>: <span class="str">"gt"</span>, <span class="str">"value"</span>: <span class="num">25</span>},
+    {<span class="str">"or"</span>: [
+      {<span class="str">"field"</span>: <span class="str">"status"</span>, <span class="str">"op"</span>: <span class="str">"eq"</span>, <span class="str">"value"</span>: <span class="str">"active"</span>},
+      {<span class="str">"field"</span>: <span class="str">"status"</span>, <span class="str">"op"</span>: <span class="str">"eq"</span>, <span class="str">"value"</span>: <span class="str">"maintenance"</span>}
+    ]}
+  ]
+}
+<span style="color:var(--text-dim)">// → temperature > 25 AND (status = 'active' OR status = 'maintenance')</span></pre>
+
+            <!-- ── 7. SORTING & LIMITING ────────────────────────────── -->
+            <h2 id="sorting-limiting">7. Sorting &amp; Limiting</h2>
+            <table class="docs-table">
+                <tr>
+                    <th>Field</th>
+                    <th>Type</th>
+                    <th>Description</th>
+                </tr>
+                <tr>
+                    <td><code>order_by</code></td>
+                    <td>string</td>
+                    <td>Field name to sort by</td>
+                </tr>
+                <tr>
+                    <td><code>order</code></td>
+                    <td>string</td>
+                    <td><code>"asc"</code> (default) or <code>"desc"</code></td>
+                </tr>
+                <tr>
+                    <td><code>limit</code></td>
+                    <td>integer</td>
+                    <td>Maximum number of records to return</td>
+                </tr>
+            </table>
+            <pre>{
+  <span class="str">"operation"</span>: <span class="str">"read"</span>,
+  <span class="str">"entity"</span>: <span class="str">"readings"</span>,
+  <span class="str">"conditions"</span>: [{<span class="str">"field"</span>: <span class="str">"temperature"</span>, <span class="str">"op"</span>: <span class="str">"gt"</span>, <span class="str">"value"</span>: <span class="num">25</span>}],
+  <span class="str">"order_by"</span>: <span class="str">"temperature"</span>,
+  <span class="str">"order"</span>: <span class="str">"desc"</span>,
+  <span class="str">"limit"</span>: <span class="num">5</span>
+}</pre>
+
+            <!-- ── 8. CRUD OPERATIONS ───────────────────────────────── -->
+            <h2 id="crud-ops">8. CRUD Operations</h2>
+
+            <h3>Create</h3>
+            <p>Insert a new record. The system auto-generates <code>record_id</code> and routes fields to the correct
+                backend.</p>
+            <pre>{
+  <span class="str">"operation"</span>: <span class="str">"create"</span>,
+  <span class="str">"entity"</span>: <span class="str">"logs"</span>,
+  <span class="str">"data"</span>: {
+    <span class="str">"log_level"</span>: <span class="str">"INFO"</span>,
+    <span class="str">"source"</span>: <span class="str">"dashboard"</span>,
+    <span class="str">"message"</span>: <span class="str">"Manual entry"</span>,
+    <span class="str">"context"</span>: {<span class="str">"user"</span>: <span class="str">"admin"</span>}
+  }
+}</pre>
+
+            <h3>Read</h3>
+            <p>Query records with optional field selection, conditions, sorting, and limiting.</p>
+            <pre>{
+  <span class="str">"operation"</span>: <span class="str">"read"</span>,
+  <span class="str">"entity"</span>: <span class="str">"users"</span>,
+  <span class="str">"fields"</span>: [<span class="str">"username"</span>, <span class="str">"role"</span>],
+  <span class="str">"conditions"</span>: [
+    {<span class="str">"field"</span>: <span class="str">"role"</span>, <span class="str">"op"</span>: <span class="str">"ne"</span>, <span class="str">"value"</span>: <span class="str">"student"</span>}
+  ]
+}</pre>
+
+            <h3>Update</h3>
+            <p>Modify fields on an existing record (identified by <code>record_id</code>).</p>
+            <pre>{
+  <span class="str">"operation"</span>: <span class="str">"update"</span>,
+  <span class="str">"entity"</span>: <span class="str">"sensor_events"</span>,
+  <span class="str">"filters"</span>: {<span class="str">"record_id"</span>: <span class="str">"abc123"</span>},
+  <span class="str">"data"</span>: {
+    <span class="str">"severity"</span>: <span class="str">"low"</span>
+  }
+}</pre>
+
+            <h3>Delete</h3>
+            <p>Remove a record from all backends that hold it (cascading).</p>
+            <pre>{
+  <span class="str">"operation"</span>: <span class="str">"delete"</span>,
+  <span class="str">"entity"</span>: <span class="str">"logs"</span>,
+  <span class="str">"filters"</span>: {<span class="str">"record_id"</span>: <span class="str">"abc123"</span>}
+}</pre>
+
+            <!-- ── 9. EXAMPLES ──────────────────────────────────────── -->
+            <h2 id="examples">9. Example Queries</h2>
+
+            <div class="example-grid">
+                <div class="example-card">
+                    <h4>🔍 Temperature Spike</h4>
+                    <pre>{
+  "operation": "read",
+  "entity": "readings",
+  "conditions": [
+    {"field": "temperature", "op": "gt", "value": 30}
+  ],
+  "fields": ["record_id", "temperature", "timestamp"]
+}</pre>
+                </div>
+                <div class="example-card">
+                    <h4>👥 Non-Student Users</h4>
+                    <pre>{
+  "operation": "read",
+  "entity": "users",
+  "conditions": [
+    {"field": "role", "op": "ne", "value": "student"}
+  ],
+  "fields": ["username", "email", "role"]
+}</pre>
+                </div>
+                <div class="example-card">
+                    <h4>🔎 Username Search</h4>
+                    <pre>{
+  "operation": "read",
+  "entity": "users",
+  "conditions": [
+    {"field": "username", "op": "like", "value": "%a%"}
+  ]
+}</pre>
+                </div>
+                <div class="example-card">
+                    <h4>🚨 Critical Alerts</h4>
+                    <pre>{
+  "operation": "read",
+  "entity": "sensor_events",
+  "conditions": [
+    {"field": "severity", "op": "in",
+     "value": ["high", "critical"]}
+  ]
+}</pre>
+                </div>
+                <div class="example-card">
+                    <h4>📊 Top 5 Hottest Readings</h4>
+                    <pre>{
+  "operation": "read",
+  "entity": "readings",
+  "conditions": [
+    {"field": "temperature", "op": "gt", "value": 25}
+  ],
+  "order_by": "temperature",
+  "order": "desc",
+  "limit": 5
+}</pre>
+                </div>
+                <div class="example-card">
+                    <h4>🌡️ Temp + Humidity Range</h4>
+                    <pre>{
+  "operation": "read",
+  "entity": "readings",
+  "conditions": [
+    {"field": "temperature", "op": "gte", "value": 22},
+    {"field": "humidity", "op": "lt", "value": 60}
+  ]
+}</pre>
+                </div>
+                <div class="example-card">
+                    <h4>⚡ OR: Multiple Sensor Types</h4>
+                    <pre>{
+  "operation": "read",
+  "entity": "sensors",
+  "conditions": [
+    {"or": [
+      {"field": "sensor_type", "op": "eq",
+       "value": "temperature"},
+      {"field": "sensor_type", "op": "eq",
+       "value": "humidity"}
+    ]}
+  ]
+}</pre>
+                </div>
+                <div class="example-card">
+                    <h4>➕ Create a Log Entry</h4>
+                    <pre>{
+  "operation": "create",
+  "entity": "logs",
+  "data": {
+    "log_level": "WARNING",
+    "source": "sensor-gateway",
+    "message": "High latency detected",
+    "context": {"ms": 450}
+  }
+}</pre>
+                </div>
+            </div>
+
+            <!-- ── 10. API ENDPOINTS ──────────────────────────────────── -->
+            <h2 id="api-endpoints">10. REST API Endpoints</h2>
+            <table class="docs-table">
+                <tr>
+                    <th>Method</th>
+                    <th>Endpoint</th>
+                    <th>Description</th>
+                </tr>
+                <tr>
+                    <td><code>GET</code></td>
+                    <td><code>/api/entities</code></td>
+                    <td>List all logical entities with descriptions</td>
+                </tr>
+                <tr>
+                    <td><code>GET</code></td>
+                    <td><code>/api/data/&lt;entity&gt;</code></td>
+                    <td>Read all records for an entity (supports query params as equality filters)</td>
+                </tr>
+                <tr>
+                    <td><code>POST</code></td>
+                    <td><code>/api/data/&lt;entity&gt;</code></td>
+                    <td>Create a new record (JSON body)</td>
+                </tr>
+                <tr>
+                    <td><code>PUT</code></td>
+                    <td><code>/api/data/&lt;entity&gt;/&lt;record_id&gt;</code></td>
+                    <td>Update a record (JSON body with patched fields)</td>
+                </tr>
+                <tr>
+                    <td><code>DELETE</code></td>
+                    <td><code>/api/data/&lt;entity&gt;/&lt;record_id&gt;</code></td>
+                    <td>Delete a record from all backends</td>
+                </tr>
+                <tr>
+                    <td><code>POST</code></td>
+                    <td><code>/api/query</code></td>
+                    <td>Execute a logical JSON query (full query format)</td>
+                </tr>
+                <tr>
+                    <td><code>GET</code></td>
+                    <td><code>/api/session</code></td>
+                    <td>Get current session info</td>
+                </tr>
+                <tr>
+                    <td><code>GET</code></td>
+                    <td><code>/api/metadata</code></td>
+                    <td>View the full metadata routing map</td>
+                </tr>
+                <tr>
+                    <td><code>POST</code></td>
+                    <td><code>/api/acid-test/&lt;name&gt;</code></td>
+                    <td>Run ACID test (<code>atomicity</code>, <code>consistency</code>, <code>isolation</code>,
+                        <code>durability</code>, <code>all</code>)</td>
+                </tr>
+            </table>
+
+            <!-- ── 11. RESPONSE FORMAT ────────────────────────────────── -->
+            <h2 id="response-format">11. Response Format</h2>
+            <p>All API responses are JSON with the following structure:</p>
+
+            <h3>Success (Read)</h3>
+            <pre>{
+  <span class="str">"status"</span>: <span class="str">"ok"</span>,
+  <span class="str">"count"</span>: <span class="num">3</span>,
+  <span class="str">"data"</span>: [
+    {<span class="str">"username"</span>: <span class="str">"alice"</span>, <span class="str">"role"</span>: <span class="str">"admin"</span>},
+    {<span class="str">"username"</span>: <span class="str">"bob"</span>,   <span class="str">"role"</span>: <span class="str">"staff"</span>},
+    {<span class="str">"username"</span>: <span class="str">"eve"</span>,   <span class="str">"role"</span>: <span class="str">"staff"</span>}
+  ]
+}</pre>
+
+            <h3>Success (Create / Update / Delete)</h3>
+            <pre>{
+  <span class="str">"status"</span>: <span class="str">"ok"</span>,
+  <span class="str">"record_id"</span>: <span class="str">"a1b2c3d4e5f6"</span>
+}</pre>
+
+            <h3>Error</h3>
+            <pre>{
+  <span class="str">"status"</span>: <span class="str">"error"</span>,
+  <span class="str">"error"</span>: <span class="str">"Missing 'entity' field"</span>
+}</pre>
+
+            <!-- ── 12. ACID ──────────────────────────────────────────── -->
+            <h2 id="acid">12. ACID Validation</h2>
+            <table class="docs-table">
+                <tr>
+                    <th>Property</th>
+                    <th>What is tested</th>
+                    <th>How</th>
+                </tr>
+                <tr>
+                    <td><strong>Atomicity</strong></td>
+                    <td>All-or-nothing across both databases</td>
+                    <td>Insert into SQL+Mongo, then attempt duplicate (UNIQUE violation). Verify both roll back.</td>
+                </tr>
+                <tr>
+                    <td><strong>Consistency</strong></td>
+                    <td>Constraints are enforced</td>
+                    <td>Try inserting a reading with non-existent <code>sensor_id</code>. FK constraint blocks it.</td>
+                </tr>
+                <tr>
+                    <td><strong>Isolation</strong></td>
+                    <td>Concurrent writes → consistent state</td>
+                    <td>Two threads update the same record simultaneously. Lock serialization prevents corruption.</td>
+                </tr>
+                <tr>
+                    <td><strong>Durability</strong></td>
+                    <td>Data survives restarts</td>
+                    <td>Insert data, close all connections, reopen, verify data persists.</td>
+                </tr>
+            </table>
+            <p>Run tests from the <strong>ACID Tests</strong> panel in the dashboard, or via CLI:</p>
+            <pre>python3 transaction_manager.py</pre>
+
+        </div>
+    </div>
+
+</body>
+
+</html>
