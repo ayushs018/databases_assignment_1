@@ -30,6 +30,7 @@
                 <input type="text" id="global-search" placeholder="Search across all entities..."
                     title="Natural Search: Find anything by keyword">
             </div>
+            <button class="btn btn-sm" id="btn-sessions" title="View active sessions">Sessions</button>
             <span class="badge" id="session-badge">—</span>
             <button class="btn-icon" id="btn-metadata" title="View Metadata">⚙</button>
         </div>
@@ -186,10 +187,44 @@
     <div id="meta-overlay" class="modal-overlay hidden">
         <div class="modal modal-lg">
             <div class="modal-header">
-                <h3>Metadata – Field Routing Map</h3>
+                <h3>Logical Schema</h3>
                 <button class="btn-icon" id="meta-close">✕</button>
             </div>
             <pre id="meta-content" class="meta-pre"></pre>
+        </div>
+    </div>
+
+    <!-- ── Query History (hidden panel) ───────────────────────── -->
+    <div id="history-overlay" class="modal-overlay hidden">
+        <div class="modal modal-lg">
+            <div class="modal-header">
+                <h3>Query Execution History</h3>
+                <button class="btn-icon" id="history-close">✕</button>
+            </div>
+            <pre id="query-history" class="meta-pre">— no queries yet —</pre>
+        </div>
+    </div>
+
+    <!-- ── Sessions (hidden panel) ───────────────────────────── -->
+    <div id="sessions-overlay" class="modal-overlay hidden">
+        <div class="modal modal-lg">
+            <div class="modal-header">
+                <h3>Active Sessions</h3>
+                <button class="btn-icon" id="sessions-close">✕</button>
+            </div>
+            <div style="padding: 1rem 1.25rem;">
+                <table id="sessions-table" style="width:100%; border-collapse: collapse;">
+                    <thead>
+                        <tr>
+                            <th style="text-align:left; padding:0.5rem; color:var(--text-dim); font-size:0.7rem; text-transform:uppercase; letter-spacing:0.06em; border-bottom:1px solid var(--border);">Session</th>
+                            <th style="text-align:left; padding:0.5rem; color:var(--text-dim); font-size:0.7rem; text-transform:uppercase; letter-spacing:0.06em; border-bottom:1px solid var(--border);">Status</th>
+                            <th style="text-align:left; padding:0.5rem; color:var(--text-dim); font-size:0.7rem; text-transform:uppercase; letter-spacing:0.06em; border-bottom:1px solid var(--border);">Started</th>
+                            <th style="text-align:left; padding:0.5rem; color:var(--text-dim); font-size:0.7rem; text-transform:uppercase; letter-spacing:0.06em; border-bottom:1px solid var(--border);">Last Active</th>
+                        </tr>
+                    </thead>
+                    <tbody id="sessions-body"></tbody>
+                </table>
+            </div>
         </div>
     </div>
 

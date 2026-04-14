@@ -9,6 +9,7 @@ let currentData = [];
 let entityMeta = {};
 let editingId = null;
 let editingEntity = null;
+let queryHistory = [];
 
 // ── Boot ─────────────────────────────────────────────────────
 document.addEventListener("DOMContentLoaded", async () => {
@@ -28,7 +29,7 @@ async function loadSession() {
 // ── Entities ─────────────────────────────────────────────────
 // ── Entities ─────────────────────────────────────────────────
 async function loadEntities() {
-    entityMeta = await api("/api/entities");
+    entityMeta = await api("/api/entities"); // { entityName: {description, fields} }
     const ul = document.getElementById("entity-list");
     ul.innerHTML = "";
     for (const [name, info] of Object.entries(entityMeta)) {
@@ -188,6 +189,28 @@ function wireEvents() {
         if (e.target === e.currentTarget) e.currentTarget.classList.add("hidden");
     });
 
+    // History
+    document.getElementById("session-badge").addEventListener("click", async () => {
+        await refreshQueryHistory();
+        document.getElementById("history-overlay").classList.remove("hidden");
+    });
+    const closeHistory = () => document.getElementById("history-overlay").classList.add("hidden");
+    document.getElementById("history-close").addEventListener("click", closeHistory);
+    document.getElementById("history-overlay").addEventListener("click", e => {
+        if (e.target === e.currentTarget) closeHistory();
+    });
+
+    // Sessions
+    document.getElementById("btn-sessions").addEventListener("click", async () => {
+        await refreshSessions();
+        document.getElementById("sessions-overlay").classList.remove("hidden");
+    });
+    const closeSessions = () => document.getElementById("sessions-overlay").classList.add("hidden");
+    document.getElementById("sessions-close").addEventListener("click", closeSessions);
+    document.getElementById("sessions-overlay").addEventListener("click", e => {
+        if (e.target === e.currentTarget) closeSessions();
+    });
+
     // Close panel buttons
     document.querySelectorAll(".close-panel").forEach(btn =>
         btn.addEventListener("click", () => {
@@ -195,6 +218,29 @@ function wireEvents() {
             document.getElementById("data-view").classList.remove("hidden");
         })
     );
+}
+
+async function refreshSessions() {
+    const tbody = document.getElementById("sessions-body");
+    if (!tbody) return;
+    tbody.innerHTML = `<tr><td colspan="4" style="padding:0.75rem;color:var(--text-dim)">Loading…</td></tr>`;
+    try {
+        const sessions = await api("/api/sessions");
+        if (!Array.isArray(sessions) || !sessions.length) {
+            tbody.innerHTML = `<tr><td colspan="4" style="padding:0.75rem;color:var(--text-dim)">No active sessions</td></tr>`;
+            return;
+        }
+        tbody.innerHTML = sessions.map(s => `
+            <tr>
+                <td style="padding:0.55rem 0.5rem; border-bottom:1px solid var(--border); font-family:var(--mono)">${escapeHtml(String(s.session_id ?? ""))}</td>
+                <td style="padding:0.55rem 0.5rem; border-bottom:1px solid var(--border)">${escapeHtml(String(s.status ?? ""))}</td>
+                <td style="padding:0.55rem 0.5rem; border-bottom:1px solid var(--border); font-family:var(--mono)">${escapeHtml(String(s.started_at ?? ""))}</td>
+                <td style="padding:0.55rem 0.5rem; border-bottom:1px solid var(--border); font-family:var(--mono)">${escapeHtml(String(s.last_active_at ?? ""))}</td>
+            </tr>
+        `).join("");
+    } catch (e) {
+        tbody.innerHTML = `<tr><td colspan="4" style="padding:0.75rem;color:var(--red)">Failed to load sessions: ${escapeHtml(e.message)}</td></tr>`;
+    }
 }
 
 function openCreateModal() {
@@ -313,9 +359,32 @@ async function runQuery() {
         const res = await api("/api/query", "POST", body);
         resultEl.textContent = JSON.stringify(res, null, 2);
         resultEl.style.color = "var(--green)";
+        await refreshQueryHistory();
     } catch (e) {
         resultEl.textContent = `❌ ${e.message}`;
         resultEl.style.color = "var(--red)";
+    }
+}
+
+// ── Query History ───────────────────────────────────────────
+async function refreshQueryHistory() {
+    try {
+        const res = await api("/api/query/history");
+        queryHistory = res.items || [];
+        const el = document.getElementById("query-history");
+        if (!el) return;
+        if (!queryHistory.length) {
+            el.textContent = "— no queries yet —";
+            return;
+        }
+        el.textContent = queryHistory.map(item => {
+            const ts = item.ts || "";
+            const dur = (item.duration_ms != null) ? `${item.duration_ms}ms` : "";
+            const count = (item.result_count != null) ? `count=${item.result_count}` : "";
+            return `[${ts}] ${dur} ${count}\n${JSON.stringify(item.query)}`;
+        }).join("\n\n");
+    } catch {
+        // ignore
     }
 }
 
@@ -339,7 +408,7 @@ async function runAcidTest(name) {
 
 // ── Metadata Viewer ──────────────────────────────────────────
 async function showMetadata() {
-    const meta = await api("/api/metadata");
+    const meta = await api("/api/schema");
     document.getElementById("meta-content").textContent = JSON.stringify(meta, null, 2);
     document.getElementById("meta-overlay").classList.remove("hidden");
 }

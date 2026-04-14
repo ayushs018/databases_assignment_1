@@ -1,39 +1,64 @@
-"""
-UI-only Flask Application for SADF Logical Dashboard
+from __future__ import annotations
 
-This version removes undefined backend dependencies
-and returns dummy data so UI can be viewed immediately.
-"""
+from datetime import datetime, timezone
+import uuid
 
 from flask import Flask, jsonify, request, render_template
+
 from bson import ObjectId
-from metadata_store import load_metadata
+
+from metadata_store import load_query_metadata
 from sql_backend import get_connection
 from mongo_backend import get_db
 from query_engine import HybridQueryEngine
-import sqlite3
-from pymongo import MongoClient
-import json
 
 
 app = Flask(__name__)
 
 # --- Backend initialization ---
-# Keep Mongo + metadata global; create SQLite connections per-request (thread safety).
-# metadata = load_metadata()  # from metadata.json
-mongo_client = MongoClient("mongodb://localhost:27017/")
-mongo_db = mongo_client["test_db"]
+# Keep Mongo + metadata global; create SQLite connections per-request.
+metadata = load_query_metadata()
+mongo_db = get_db()
 
-with open("query_metadata.json") as f:
-    metadata = json.load(f)
+# --- Sessions + history (in-memory) ---
+PROJECT_NAME = "SADF Dashboard"
+_ACTIVE_SESSION_ID = str(uuid.uuid4())[:8]
+_SESSION_STARTED_AT = datetime.now(timezone.utc).isoformat()
+_QUERY_HISTORY: list[dict] = []
 
 
 def _new_engine():
-    sql_conn = sqlite3.connect("hybrid.db")
+    sql_conn = get_connection()
     return HybridQueryEngine(metadata, sql_conn, mongo_db), sql_conn
 
 
-# engine = _new_engine()
+def _serialize(obj):
+    if isinstance(obj, ObjectId):
+        return str(obj)
+    if isinstance(obj, list):
+        return [_serialize(i) for i in obj]
+    if isinstance(obj, dict):
+        return {k: _serialize(v) for k, v in obj.items()}
+    return obj
+
+
+def _logical_schema():
+    """
+    Return a logical-only schema view:
+    - entity -> {description, fields}
+    No backend/table/collection details are included.
+    """
+    entities: dict[str, dict] = {}
+    for field, info in metadata.items():
+        entity = info.get("table") or info.get("collection") or "unknown"
+        ent = entities.setdefault(entity, {"description": "", "fields": []})
+        if field not in ent["fields"]:
+            ent["fields"].append(field)
+
+    for ent in entities.values():
+        ent["fields"].sort()
+
+    return dict(sorted(entities.items(), key=lambda kv: kv[0].lower()))
 
 # ── Pages ─────────────────────────────────────
 
@@ -53,30 +78,30 @@ def docs():
 def api_session():
 
     return jsonify({
-        "user": "demo_user",
-        "database": "hybrid_demo",
-        "status": "active"
+        "project_name": PROJECT_NAME,
+        "session_id": _ACTIVE_SESSION_ID,
+        "status": "active",
+        "started_at": _SESSION_STARTED_AT,
     })
 
+@app.route("/api/sessions")
+def api_sessions():
+    return jsonify([{
+        "session_id": _ACTIVE_SESSION_ID,
+        "status": "active",
+        "started_at": _SESSION_STARTED_AT,
+        "last_active_at": datetime.now(timezone.utc).isoformat(),
+    }])
 
-@app.route("/api/metadata")
-def api_metadata():
 
-    return jsonify(metadata)
+@app.route("/api/schema")
+def api_schema():
+    return jsonify(_logical_schema())
 
 
 @app.route("/api/entities")
 def api_entities():
-
-    entities = set()
-    for info in metadata.values():
-        table = info.get("table")
-        collection = info.get("collection")
-        if table:
-            entities.add(table)
-        if collection:
-            entities.add(collection)
-    return jsonify(sorted(entities))
+    return jsonify(_logical_schema())
 
 
 # ── CRUD (dummy responses) ───────────────────
@@ -86,7 +111,7 @@ def _fields_for_entity(entity_name: str):
     """
     fields = []
     for field, info in metadata.items():
-        if info.get("table") == entity_name or info.get("collection") == entity_name:
+        if (info.get("table") == entity_name) or (info.get("collection") == entity_name):
             fields.append(field)
     return fields
 
@@ -111,7 +136,7 @@ def api_read(entity):
         "status": "ok",
         "entity": entity,
         "count": len(result),
-        "data": result,
+        "data": _serialize(result),
     })
 
 
@@ -120,9 +145,9 @@ def api_create(entity):
     payload = request.get_json(force=True) or {}
     engine, sql_conn = _new_engine()
     try:
-        engine.execute({
+        res = engine.execute({
             "operation": "insert",
-            "filters": payload,   # insert() currently reads `filters` as data
+            "data": payload,
         })
     finally:
         sql_conn.close()
@@ -130,6 +155,7 @@ def api_create(entity):
     return jsonify({
         "status": "ok",
         "entity": entity,
+        "record_id": res.get("record_id") if isinstance(res, dict) else None,
     }), 201
 
 
@@ -174,52 +200,52 @@ def api_delete(entity, record_id):
     })
 
 
-# ── Logical Query (dummy) ────────────────────
-
-def serialize_mongo(obj):
-
-    if isinstance(obj, list):
-
-        return [serialize_mongo(i) for i in obj]
-
-    elif isinstance(obj, dict):
-
-        new_dict = {}
-
-        for k, v in obj.items():
-
-            if isinstance(v, ObjectId):
-
-                new_dict[k] = str(v)
-
-            else:
-
-                new_dict[k] = serialize_mongo(v)
-
-        return new_dict
-
-    else:
-
-        return obj
-
 @app.route("/api/query", methods=["POST"])
 def api_query():
 
-    query = request.json
-
+    query = request.get_json(force=True) or {}
+    started = datetime.now(timezone.utc)
     engine, sql_conn = _new_engine()
 
     try:
-
         result = engine.execute(query)
-
+    except Exception as e:
+        finished = datetime.now(timezone.utc)
+        _QUERY_HISTORY.append({
+            "ts": started.isoformat(),
+            "duration_ms": int((finished - started).total_seconds() * 1000),
+            "query": query,
+            "error": str(e),
+        })
+        _QUERY_HISTORY[:] = _QUERY_HISTORY[-100:]
+        return jsonify({"status": "error", "error": str(e)}), 500
     finally:
-
         sql_conn.close()
 
-    result = serialize_mongo(result)
+    finished = datetime.now(timezone.utc)
+    serialized = _serialize(result)
 
-    return jsonify(result)
+    _QUERY_HISTORY.append({
+        "ts": started.isoformat(),
+        "duration_ms": int((finished - started).total_seconds() * 1000),
+        "query": query,
+        "result_count": len(serialized) if isinstance(serialized, list) else None,
+    })
+    _QUERY_HISTORY[:] = _QUERY_HISTORY[-100:]
+
+    return jsonify({
+        "status": "ok",
+        "result": serialized,
+    })
+
+
+@app.route("/api/query/history", methods=["GET"])
+def api_query_history():
+    return jsonify({
+        "status": "ok",
+        "count": len(_QUERY_HISTORY),
+        "items": list(reversed(_QUERY_HISTORY)),
+    })
 
 
 @app.route("/api/search", methods=["GET"])
@@ -298,5 +324,7 @@ if __name__ == "__main__":
     app.run(
         host="0.0.0.0",
         port=5000,
-        debug=True
+        debug=False,
+        threaded=True,
+        use_reloader=False
     )

@@ -151,30 +151,6 @@
             gap: 0.5rem;
         }
 
-        .schema-card h4 .tag {
-            font-size: 0.62rem;
-            padding: 2px 8px;
-            border-radius: 100px;
-            font-weight: 500;
-            text-transform: uppercase;
-            letter-spacing: 0.05em;
-        }
-
-        .tag-sql {
-            background: rgba(91, 156, 245, 0.15);
-            color: var(--accent);
-        }
-
-        .tag-mongo {
-            background: rgba(69, 212, 138, 0.15);
-            color: var(--green);
-        }
-
-        .tag-both {
-            background: rgba(240, 178, 58, 0.15);
-            color: var(--amber);
-        }
-
         .schema-card .desc {
             font-size: 0.76rem;
             color: var(--text-dim);
@@ -197,18 +173,7 @@
             border: 1px solid var(--border);
         }
 
-        .field-chip.sql {
-            border-color: rgba(91, 156, 245, 0.3);
-        }
-
-        .field-chip.mongo {
-            border-color: rgba(69, 212, 138, 0.3);
-        }
-
-        .field-chip.global {
-            border-color: rgba(240, 178, 58, 0.4);
-            color: var(--amber);
-        }
+        /* Intentionally no backend-specific styling (constraint). */
 
         .toc {
             background: var(--bg-card);
@@ -339,118 +304,89 @@
 
             <!-- ── 1. ARCHITECTURE ─────────────────────────────────── -->
             <h2 id="architecture">1. Architecture Overview</h2>
-            <p>SADF uses <strong>two SQLite backends</strong> to simulate a hybrid SQL + MongoDB storage system:</p>
-            <table class="docs-table">
-                <tr>
-                    <th>Backend</th>
-                    <th>File</th>
-                    <th>Stores</th>
-                    <th>Style</th>
-                </tr>
-                <tr>
-                    <td><code>sql.db</code></td>
-                    <td>SQL (relational)</td>
-                    <td>Structured, stable fields</td>
-                    <td>Normalised tables with FKs</td>
-                </tr>
-                <tr>
-                    <td><code>mongo.db</code></td>
-                    <td>MongoDB (document)</td>
-                    <td>Semi-structured, variable fields</td>
-                    <td>JSON blobs in a <code>documents</code> table</td>
-                </tr>
-            </table>
-            <p>A <strong>Metadata Manager</strong> holds a JSON routing map that tells the engine which fields live in
-                which backend. Users never see table names, collection names, or physical storage — only <em>logical
-                    entities</em>.</p>
+            <p>The dashboard presents a <strong>logical database view</strong> of the system. It hides all physical
+                storage details and exposes only logical concepts.</p>
 
             <!-- ── 2. ENTITIES ──────────────────────────────────────── -->
             <h2 id="entities">2. Entities &amp; Data Model</h2>
             <p>The system manages six logical entities for the <strong>IoT Smart Campus</strong> scenario:</p>
 
             <div class="schema-card">
-                <h4>users <span class="tag tag-sql">SQL</span></h4>
+                <h4>users</h4>
                 <p class="desc">Campus system users — students, staff, administrators.</p>
                 <div class="fields">
-                    <span class="field-chip sql">user_id (PK)</span>
-                    <span class="field-chip sql">username (UNIQUE)</span>
-                    <span class="field-chip sql">email</span>
-                    <span class="field-chip sql">role</span>
+                    <span class="field-chip">user_id</span>
+                    <span class="field-chip">username</span>
+                    <span class="field-chip">email</span>
+                    <span class="field-chip">role</span>
                 </div>
             </div>
 
             <div class="schema-card">
-                <h4>sensors <span class="tag tag-sql">SQL</span></h4>
+                <h4>sensors</h4>
                 <p class="desc">IoT sensors deployed across campus locations.</p>
                 <div class="fields">
-                    <span class="field-chip sql">sensor_id (PK)</span>
-                    <span class="field-chip sql">user_id (FK→users)</span>
-                    <span class="field-chip sql">location</span>
-                    <span class="field-chip sql">sensor_type</span>
-                    <span class="field-chip sql">status</span>
+                    <span class="field-chip">sensor_id</span>
+                    <span class="field-chip">user_id</span>
+                    <span class="field-chip">location</span>
+                    <span class="field-chip">sensor_type</span>
+                    <span class="field-chip">status</span>
                 </div>
             </div>
 
             <div class="schema-card">
-                <h4>readings <span class="tag tag-both">SQL + MONGO</span></h4>
-                <p class="desc">Structured sensor readings merged with semi-structured event data via
-                    <code>record_id</code>.</p>
+                <h4>readings</h4>
+                <p class="desc">Structured sensor readings represented as logical objects.</p>
                 <div class="fields">
-                    <span class="field-chip sql">reading_id (PK)</span>
-                    <span class="field-chip sql">sensor_id (FK→sensors)</span>
-                    <span class="field-chip global">record_id (GLOBAL)</span>
-                    <span class="field-chip sql">timestamp</span>
-                    <span class="field-chip sql">temperature</span>
-                    <span class="field-chip sql">humidity</span>
+                    <span class="field-chip">reading_id</span>
+                    <span class="field-chip">sensor_id</span>
+                    <span class="field-chip">record_id</span>
+                    <span class="field-chip">timestamp</span>
+                    <span class="field-chip">temperature</span>
+                    <span class="field-chip">humidity</span>
                 </div>
             </div>
 
             <div class="schema-card">
-                <h4>sensor_events <span class="tag tag-mongo">MONGO</span></h4>
+                <h4>sensor_events</h4>
                 <p class="desc">Variable-payload sensor events — alerts, spikes, drops.</p>
                 <div class="fields">
-                    <span class="field-chip global">record_id (GLOBAL)</span>
-                    <span class="field-chip mongo">event_type</span>
-                    <span class="field-chip mongo">payload (JSON)</span>
-                    <span class="field-chip mongo">severity</span>
-                    <span class="field-chip mongo">tags (JSON array)</span>
+                    <span class="field-chip">record_id</span>
+                    <span class="field-chip">event_type</span>
+                    <span class="field-chip">payload</span>
+                    <span class="field-chip">severity</span>
+                    <span class="field-chip">tags</span>
                 </div>
             </div>
 
             <div class="schema-card">
-                <h4>logs <span class="tag tag-mongo">MONGO</span></h4>
+                <h4>logs</h4>
                 <p class="desc">System and access logs with free-form JSON context.</p>
                 <div class="fields">
-                    <span class="field-chip global">record_id (GLOBAL)</span>
-                    <span class="field-chip mongo">log_level</span>
-                    <span class="field-chip mongo">source</span>
-                    <span class="field-chip mongo">message</span>
-                    <span class="field-chip mongo">context (JSON)</span>
+                    <span class="field-chip">record_id</span>
+                    <span class="field-chip">log_level</span>
+                    <span class="field-chip">source</span>
+                    <span class="field-chip">message</span>
+                    <span class="field-chip">context</span>
                 </div>
             </div>
 
             <div class="schema-card">
-                <h4>alerts <span class="tag tag-mongo">MONGO</span></h4>
+                <h4>alerts</h4>
                 <p class="desc">Threshold-triggered alerts from sensors.</p>
                 <div class="fields">
-                    <span class="field-chip global">record_id (GLOBAL)</span>
-                    <span class="field-chip mongo">alert_type</span>
-                    <span class="field-chip mongo">triggered_by</span>
-                    <span class="field-chip mongo">details (JSON)</span>
-                    <span class="field-chip mongo">resolved</span>
+                    <span class="field-chip">record_id</span>
+                    <span class="field-chip">alert_type</span>
+                    <span class="field-chip">triggered_by</span>
+                    <span class="field-chip">details</span>
+                    <span class="field-chip">resolved</span>
                 </div>
             </div>
 
-            <!-- ── 3. GLOBAL KEY ───────────────────────────────────── -->
-            <h2 id="global-key">3. Global Linking Key</h2>
-            <p>The field <code>record_id</code> is a UUID-based identifier present in <strong>both</strong> databases.
-                It serves as the cross-database join key that lets the engine merge SQL and Mongo data into a single
-                logical record.</p>
-            <ul>
-                <li>Auto-generated on <code>create</code> if not provided</li>
-                <li>Used as the key for <code>update</code> and <code>delete</code> operations</li>
-                <li>Appears in every entity across both backends</li>
-            </ul>
+            <!-- ── 3. OBJECT IDENTIFIER ────────────────────────────── -->
+            <h2 id="global-key">3. Logical Object Identifier</h2>
+            <p>Logical objects may include an identifier field (for example <code>record_id</code>) that the dashboard
+                uses for update and delete operations.</p>
 
             <!-- ── 4. QUERY FORMAT ─────────────────────────────────── -->
             <h2 id="query-format">4. Query JSON Format</h2>
@@ -508,7 +444,7 @@
             <table class="docs-table">
                 <tr>
                     <th>Operator</th>
-                    <th>SQL Equivalent</th>
+                    <th>Equivalent</th>
                     <th>Description</th>
                     <th>Example</th>
                 </tr>
@@ -827,8 +763,13 @@
                 </tr>
                 <tr>
                     <td><code>GET</code></td>
-                    <td><code>/api/metadata</code></td>
-                    <td>View the full metadata routing map</td>
+                    <td><code>/api/schema</code></td>
+                    <td>View the logical schema (no backend details)</td>
+                </tr>
+                <tr>
+                    <td><code>GET</code></td>
+                    <td><code>/api/query/history</code></td>
+                    <td>View query execution history</td>
                 </tr>
                 <tr>
                     <td><code>POST</code></td>
@@ -876,7 +817,7 @@
                 <tr>
                     <td><strong>Atomicity</strong></td>
                     <td>All-or-nothing across both databases</td>
-                    <td>Insert into SQL+Mongo, then attempt duplicate (UNIQUE violation). Verify both roll back.</td>
+                    <td>Insert into the logical system, then attempt a conflicting write. Verify the overall operation is all-or-nothing.</td>
                 </tr>
                 <tr>
                     <td><strong>Consistency</strong></td>

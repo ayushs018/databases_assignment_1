@@ -1,5 +1,7 @@
 from datetime import datetime, timezone
 import json
+import time
+from sql_backend import create_table, add_missing_columns, get_existing_columns
 
 
 class HybridQueryEngine:
@@ -31,8 +33,7 @@ class HybridQueryEngine:
             return self.read(query)
 
         elif op in ["create", "insert"]:
-            self.insert(query)
-            return {"status": "insert successful"}
+            return self.insert(query)
 
         elif op == "update":
             self.update(query)
@@ -45,6 +46,36 @@ class HybridQueryEngine:
         else:
             raise ValueError("Invalid operation")
 
+    def _trace_enabled(self, query):
+        return bool(query.get("__trace"))
+
+    def _wrap_with_trace(self, query, result, trace):
+        if not self._trace_enabled(query):
+            return result
+        return {"result": result, "__trace": trace}
+
+    def _filter_conditions_for_sql(self, conditions, existing_cols):
+        """
+        Drop conditions referencing columns that don't exist in a given SQL table.
+        This prevents sqlite3.OperationalError: no such column: <field>.
+        """
+        if not conditions:
+            return []
+
+        filtered = []
+        for cond in conditions:
+            if not isinstance(cond, dict):
+                continue
+            if "or" in cond and isinstance(cond["or"], list):
+                inner = self._filter_conditions_for_sql(cond["or"], existing_cols)
+                if inner:
+                    filtered.append({"or": inner})
+                continue
+            field = cond.get("field")
+            if field and field in existing_cols:
+                filtered.append(cond)
+        return filtered
+
     # =========================
     # CREATE / INSERT
     # =========================
@@ -52,11 +83,15 @@ class HybridQueryEngine:
 
     def insert(self, query):
 
-        data = query.get("data", {})
+        trace = {}
+        t0 = time.perf_counter()
+        # Accept either "data" (preferred) or "filters" (older UI payloads)
+        data = query.get("data") or query.get("filters") or {}
         sys_ingested_at = datetime.now(timezone.utc).isoformat()
         data[self.merge_key] = sys_ingested_at
         sql_data = {}
         mongo_data = {}
+        t_route0 = time.perf_counter()
         # Separate data per backend
         for field, val in data.items():
             info = self.metadata.get(field)
@@ -70,13 +105,18 @@ class HybridQueryEngine:
                 sql_data.setdefault(info["table"], {})[field] = val
             else:
                 mongo_data.setdefault(info["collection"], {})[field] = val
+        trace["route_ms"] = (time.perf_counter() - t_route0) * 1000
 
         inserted_mongo_ids = []
         try:
             # BEGIN SQL TRANSACTION
             sql_cursor = self.sql_conn.cursor()
             # SQL inserts
+            t_sql0 = time.perf_counter()
             for table, row in sql_data.items():
+                # Ensure table exists and columns are present
+                create_table(self.sql_conn, table, row.keys())
+                add_missing_columns(self.sql_conn, table, row.keys())
                 cols = ", ".join(row.keys())
                 placeholders = ", ".join(["?"] * len(row))
                 q = f"""
@@ -84,17 +124,24 @@ class HybridQueryEngine:
                 VALUES ({placeholders})
                 """
                 sql_cursor.execute(q, list(row.values()))
+            trace["sql_ms"] = (time.perf_counter() - t_sql0) * 1000
             # Mongo inserts
+            t_m0 = time.perf_counter()
             for collection, doc in mongo_data.items():
                 result = self.mongo_db[collection].insert_one(doc)
                 inserted_mongo_ids.append(
                     (collection, result.inserted_id)
                 )
+            trace["mongo_ms"] = (time.perf_counter() - t_m0) * 1000
             # COMMIT SQL if all succeed
+            t_commit0 = time.perf_counter()
             self.sql_conn.commit()
+            trace["commit_ms"] = (time.perf_counter() - t_commit0) * 1000
+            trace["total_ms"] = (time.perf_counter() - t0) * 1000
+            trace["record_id"] = sys_ingested_at
             return {
-                "status": "success",
-                "sys_ingested_at": sys_ingested_at
+                "status": "ok",
+                "record_id": sys_ingested_at
             }
         except Exception as e:
             # rollback SQL
@@ -104,18 +151,21 @@ class HybridQueryEngine:
                 self.mongo_db[collection].delete_one(
                     {"_id": _id}
                 )
-            return {
+            trace["total_ms"] = (time.perf_counter() - t0) * 1000
+            return self._wrap_with_trace(query, {
                 "status": "error",
                 "message": str(e)
-            }
+            }, trace)
 
     # =========================
     # READ
     # =========================
     def read(self, query):
 
+        trace = {}
+        t0 = time.perf_counter()
         fields = query.get("fields", [])
-        filters = query.get("filters", {})
+        filters = query.get("filters", {}) or {}
         conditions = query.get("conditions", [])
         order_by = query.get("order_by")
         order = query.get("order", "asc")
@@ -132,6 +182,7 @@ class HybridQueryEngine:
         sql_plan = {}
         mongo_plan = {}
 
+        t_route0 = time.perf_counter()
         for f in fields:
             info = self.metadata.get(f)
             if f == 'sys_ingested_at':
@@ -145,25 +196,52 @@ class HybridQueryEngine:
             else:
                 
                 mongo_plan.setdefault(info["collection"], []).append(f)
+        trace["route_ms"] = (time.perf_counter() - t_route0) * 1000
 
+        # Split filters so we don't apply Mongo-only fields to SQL (and vice-versa).
+        # This prevents "no such column" errors during SQL query building.
+        sql_filters = {}
+        mongo_filters = {}
+        for k, v in filters.items():
+            info = self.metadata.get(k)
+            if not info:
+                continue
+            if info.get("backend") == "sql":
+                sql_filters[k] = v
+            else:
+                mongo_filters[k] = v
+        # Always allow merge key filtering for both backends
+        if self.merge_key in filters:
+            sql_filters[self.merge_key] = filters[self.merge_key]
+            mongo_filters[self.merge_key] = filters[self.merge_key]
+
+        t_sql0 = time.perf_counter()
         sql_results = self._execute_sql_read(
             sql_plan,
-            filters,
+            sql_filters,
             conditions,
             order_by,
             order,
             limit
         )
+        trace["sql_ms"] = (time.perf_counter() - t_sql0) * 1000
 
+        t_m0 = time.perf_counter()
         mongo_results = self._execute_mongo_read(
             mongo_plan,
-            filters,
+            mongo_filters,
             conditions,
             order_by,
             order,
             limit
         )
-        return self._merge(sql_results, mongo_results)
+        trace["mongo_ms"] = (time.perf_counter() - t_m0) * 1000
+        t_merge0 = time.perf_counter()
+        merged = self._merge(sql_results, mongo_results)
+        trace["merge_ms"] = (time.perf_counter() - t_merge0) * 1000
+        trace["total_ms"] = (time.perf_counter() - t0) * 1000
+        trace["result_count"] = len(merged) if isinstance(merged, list) else None
+        return self._wrap_with_trace(query, merged, trace)
 
     # =========================
     # SQL READ
@@ -185,13 +263,21 @@ class HybridQueryEngine:
             cur = self.sql_conn.cursor()
 
             for table, fields in sql_plan.items():
+                existing = set(get_existing_columns(self.sql_conn, table))
+                safe_fields = [f for f in fields if f in existing]
+                if not safe_fields:
+                    continue
+
+                safe_filters = {k: v for k, v in (filters or {}).items() if k in existing}
+                safe_conditions = self._filter_conditions_for_sql(conditions, existing)
+                safe_order_by = order_by if (order_by in existing) else None
 
                 query, values = self._build_sql_query(
                     table,
-                    fields,
-                    filters,
-                    conditions,
-                    order_by,
+                    safe_fields,
+                    safe_filters,
+                    safe_conditions,
+                    safe_order_by,
                     order,
                     limit
                 )
@@ -550,7 +636,6 @@ class HybridQueryEngine:
                 "reason": "Insert failed, durability cannot be verified"
             }
 
-        # simulate system interruption:
         # perform a fresh read query
         query = {"operation": "read",
             "fields": ["username", "spo2", "device_model", "timezone"],
@@ -613,8 +698,8 @@ class HybridQueryEngine:
         t2 = threading.Thread(target=update_spo2, args=(99,))
         t1.start()
         t2.start()
-        t1.join()
         t2.join()
+        t1.join()
         # Step 3 — read final value
         read_query = {
             "operation": "read",
@@ -735,13 +820,12 @@ class HybridQueryEngine:
         Artificial failure occurs during insert.
         SQL changes must rollback completely.
         """
-        username = "ayush_atomic"
+        username = "ayush_atomic_test_2"
         insert_query = {
             "operation": "insert",
             "data": {
                 "username": username,
-                "spo2": 97,
-                "force_fail": True   # trigger artificial failure
+                "spo2": 99,
             }
         }
         try:

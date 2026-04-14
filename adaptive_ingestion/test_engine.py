@@ -118,6 +118,6 @@ if __name__ == "__main__":
     # test_read()
 
     # print (engine.test_durability())
-    # print (engine.test_isolation())
+    print (engine.test_isolation())
     # print (engine.test_consistency())
-    print (engine.test_atomicity())
+    # print (engine.test_atomicity())
