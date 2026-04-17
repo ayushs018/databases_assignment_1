@@ -44,12 +44,15 @@ def _serialize(obj):
 
 def _logical_schema():
     """
-    Return a logical-only schema view:
-    - entity -> {description, fields}
-    No backend/table/collection details are included.
+    Return a logical-only schema view.
+    Keeps SQL entities (e.g. USERS) and Mongo entities (e.g. users) separate
+    so users can explore each backend's data independently.
+    Hides all backend/table/collection implementation details.
     """
     entities: dict[str, dict] = {}
     for field, info in metadata.items():
+        if field.startswith("_"):
+            continue
         entity = info.get("table") or info.get("collection") or "unknown"
         ent = entities.setdefault(entity, {"description": "", "fields": []})
         if field not in ent["fields"]:
@@ -107,12 +110,37 @@ def api_entities():
 # ── CRUD (dummy responses) ───────────────────
 def _fields_for_entity(entity_name: str):
     """
-    Helper to get all fields belonging to a given table/collection name.
+    Return fields belonging to a logical entity, filtered by backend type.
+    - SQL table entities (e.g. USERS): returns SQL-backed fields for that table.
+    - Mongo collection entities (e.g. users): returns Mongo-backed fields for that collection.
+    sys_ingested_at is always included as the merge/join key.
     """
+    # Detect whether this entity is a SQL table or Mongo collection
+    is_sql_entity = any(
+        info.get("table") == entity_name and info.get("backend") == "sql"
+        for info in metadata.values()
+    )
+
     fields = []
     for field, info in metadata.items():
-        if (info.get("table") == entity_name) or (info.get("collection") == entity_name):
-            fields.append(field)
+        if field.startswith("_"):
+            continue
+        table = info.get("table") or ""
+        collection = info.get("collection") or ""
+        backend = info.get("backend", "")
+
+        if is_sql_entity:
+            # SQL entity: include all fields mapped to this table
+            if table == entity_name:
+                fields.append(field)
+        else:
+            # Mongo entity: include only Mongo-backed fields for this collection
+            if collection == entity_name and backend == "mongo":
+                fields.append(field)
+
+    # Always ensure merge key is present
+    if "sys_ingested_at" not in fields:
+        fields.append("sys_ingested_at")
     return fields
 
 @app.route("/api/data/<entity>", methods=["GET"])
@@ -274,47 +302,42 @@ def api_search():
     })
 
 
-# ── ACID Tests (dummy results) ───────────────
+# ── ACID Tests (actual results) ───────────────
 
 @app.route("/api/acid-test/<test_name>", methods=["POST"])
 def api_acid_test(test_name):
 
-    results = {
+    engine, sql_conn = _new_engine()
+    try:
+        def format_res(name, r):
+            return {
+                "test": name,
+                "status": "passed" if r.get("passed") else "failed",
+                "passed": bool(r.get("passed")),
+                "reason": r.get("reason", "")
+            }
 
-        "atomicity":
-        {
-            "test": "atomicity",
-            "status": "passed"
-        },
-
-        "consistency":
-        {
-            "test": "consistency",
-            "status": "passed"
-        },
-
-        "isolation":
-        {
-            "test": "isolation",
-            "status": "passed"
-        },
-
-        "durability":
-        {
-            "test": "durability",
-            "status": "passed"
-        },
-
-        "all":
-        [
-            {"test": "atomicity", "status": "passed"},
-            {"test": "consistency", "status": "passed"},
-            {"test": "isolation", "status": "passed"},
-            {"test": "durability", "status": "passed"}
-        ]
-    }
-
-    return jsonify(results.get(test_name, {"error": "unknown test"}))
+        if test_name == "atomicity":
+            return jsonify([format_res("atomicity", engine.test_atomicity())])
+        elif test_name == "consistency":
+            return jsonify([format_res("consistency", engine.test_consistency())])
+        elif test_name == "isolation":
+            return jsonify([format_res("isolation", engine.test_isolation())])
+        elif test_name == "durability":
+            return jsonify([format_res("durability", engine.test_durability())])
+        elif test_name == "all":
+            return jsonify([
+                format_res("atomicity", engine.test_atomicity()),
+                format_res("consistency", engine.test_consistency()),
+                format_res("isolation", engine.test_isolation()),
+                format_res("durability", engine.test_durability()),
+            ])
+        else:
+            return jsonify({"error": "unknown test"}), 400
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+    finally:
+        sql_conn.close()
 
 
 # ── Run ─────────────────────────────────────

@@ -8,6 +8,7 @@ class HybridQueryEngine:
     def __init__(self, metadata, sql_conn, mongo_db):
         self.metadata = metadata
         self.sql_conn = sql_conn
+        self.sql_conn.isolation_level = None  # Prevent implicit commits on DDL
         self.mongo_db = mongo_db
         self.merge_key = "sys_ingested_at"
 
@@ -110,6 +111,7 @@ class HybridQueryEngine:
         inserted_mongo_ids = []
         try:
             # BEGIN SQL TRANSACTION
+            self.sql_conn.execute("BEGIN IMMEDIATE")
             sql_cursor = self.sql_conn.cursor()
             # SQL inserts
             t_sql0 = time.perf_counter()
@@ -132,10 +134,12 @@ class HybridQueryEngine:
                 inserted_mongo_ids.append(
                     (collection, result.inserted_id)
                 )
+            if query.get("__fail_mongo"):
+                raise Exception("Simulated Mongo failure")
             trace["mongo_ms"] = (time.perf_counter() - t_m0) * 1000
             # COMMIT SQL if all succeed
             t_commit0 = time.perf_counter()
-            self.sql_conn.commit()
+            self.sql_conn.execute("COMMIT")
             trace["commit_ms"] = (time.perf_counter() - t_commit0) * 1000
             trace["total_ms"] = (time.perf_counter() - t0) * 1000
             trace["record_id"] = sys_ingested_at
@@ -145,7 +149,8 @@ class HybridQueryEngine:
             }
         except Exception as e:
             # rollback SQL
-            self.sql_conn.rollback()
+            try: self.sql_conn.execute("ROLLBACK")
+            except: pass
             # rollback Mongo manually
             for collection, _id in inserted_mongo_ids:
                 self.mongo_db[collection].delete_one(
@@ -215,29 +220,89 @@ class HybridQueryEngine:
             sql_filters[self.merge_key] = filters[self.merge_key]
             mongo_filters[self.merge_key] = filters[self.merge_key]
 
-        t_sql0 = time.perf_counter()
-        sql_results = self._execute_sql_read(
-            sql_plan,
-            sql_filters,
-            conditions,
-            order_by,
-            order,
-            limit
-        )
-        trace["sql_ms"] = (time.perf_counter() - t_sql0) * 1000
+        # Precisely determine if each backend is "filtered"
+        # A backend is filtered if it has direct filters OR if it has conditions that apply to its fields
+        sql_safe_conditions = []
+        if sql_plan:
+            # Get all fields that could exist in SQL
+            sql_fields = [f for f, info in self.metadata.items() if info.get("backend") == "sql"]
+            if self.merge_key not in sql_fields: sql_fields.append(self.merge_key)
+            sql_safe_conditions = self._filter_conditions_for_sql(conditions, sql_fields)
+        
+        mongo_safe_conditions = []
+        if mongo_plan:
+            # Get all fields that could exist in Mongo
+            mongo_fields = [f for f, info in self.metadata.items() if info.get("backend") == "mongo"]
+            if self.merge_key not in mongo_fields: mongo_fields.append(self.merge_key)
+            mongo_safe_conditions = self._filter_conditions_for_sql(conditions, mongo_fields)
 
-        t_m0 = time.perf_counter()
-        mongo_results = self._execute_mongo_read(
-            mongo_plan,
-            mongo_filters,
-            conditions,
-            order_by,
-            order,
-            limit
-        )
-        trace["mongo_ms"] = (time.perf_counter() - t_m0) * 1000
+        sql_filtered = bool(sql_filters) or bool(sql_safe_conditions)
+        mongo_filtered = bool(mongo_filters) or bool(mongo_safe_conditions)
+
+        # Decide execution order for optimization
+        if mongo_filters and not sql_filters and not conditions:
+            # Execute Mongo first
+            t_m0 = time.perf_counter()
+            mongo_results = self._execute_mongo_read(
+                mongo_plan,
+                mongo_filters,
+                conditions,
+                order_by,
+                order,
+                limit
+            )
+            trace["mongo_ms"] = (time.perf_counter() - t_m0) * 1000
+            
+            mongo_keys = [r[self.merge_key] for r in mongo_results if self.merge_key in r]
+            if not mongo_keys:
+                return self._wrap_with_trace(query, [], trace)
+                
+            # Pipe to SQL
+            if not conditions:
+                sql_filters[self.merge_key] = mongo_keys
+                
+            t_sql0 = time.perf_counter()
+            sql_results = self._execute_sql_read(
+                sql_plan,
+                sql_filters,
+                conditions,
+                order_by,
+                order,
+                limit
+            )
+            trace["sql_ms"] = (time.perf_counter() - t_sql0) * 1000
+        else:
+            # Execute SQL first
+            t_sql0 = time.perf_counter()
+            sql_results = self._execute_sql_read(
+                sql_plan,
+                sql_filters,
+                conditions,
+                order_by,
+                order,
+                limit
+            )
+            trace["sql_ms"] = (time.perf_counter() - t_sql0) * 1000
+
+            if sql_filtered and not mongo_filters:
+                sql_keys = [r[self.merge_key] for r in sql_results if self.merge_key in r]
+                if not sql_keys:
+                    return self._wrap_with_trace(query, [], trace)
+                mongo_filters[self.merge_key] = {"$in": sql_keys}
+
+            t_m0 = time.perf_counter()
+            mongo_results = self._execute_mongo_read(
+                mongo_plan,
+                mongo_filters,
+                conditions,
+                order_by,
+                order,
+                limit
+            )
+            trace["mongo_ms"] = (time.perf_counter() - t_m0) * 1000
+
         t_merge0 = time.perf_counter()
-        merged = self._merge(sql_results, mongo_results)
+        merged = self._merge(sql_results, mongo_results, sql_filtered, mongo_filtered)
         trace["merge_ms"] = (time.perf_counter() - t_merge0) * 1000
         trace["total_ms"] = (time.perf_counter() - t0) * 1000
         trace["result_count"] = len(merged) if isinstance(merged, list) else None
@@ -281,7 +346,6 @@ class HybridQueryEngine:
                     order,
                     limit
                 )
-
                 cur.execute(query, values)
 
                 cols = [d[0] for d in cur.description]
@@ -342,11 +406,15 @@ class HybridQueryEngine:
 
         results = []
 
-        mongo_query = self._build_mongo_query(filters, conditions)
         for col, fields in mongo_plan.items():
-
             if self.merge_key not in fields:
                 fields.append(self.merge_key)
+
+            # Filter conditions to only those that apply to this collection's fields
+            col_fields = [f for f, info in self.metadata.items() if info.get("collection") == col]
+            col_safe_conditions = self._filter_conditions_for_sql(conditions, col_fields)
+            
+            mongo_query = self._build_mongo_query(filters, col_safe_conditions)
 
             projection = {f: 1 for f in fields}
             projection["_id"] = 0
@@ -478,18 +546,40 @@ class HybridQueryEngine:
     # =========================
     # MERGE RESULTS
     # =========================
-    def _merge(self, sql_res, mongo_res):
+    def _merge(self, sql_res, mongo_res, sql_filtered=False, mongo_filtered=False):
+        sql_keys = {r.get(self.merge_key) for r in sql_res} if sql_filtered else None
+        mongo_keys = {r.get(self.merge_key) for r in mongo_res} if mongo_filtered else None
+        
+        valid_keys = None
+        if sql_keys is not None and mongo_keys is not None:
+            valid_keys = sql_keys.intersection(mongo_keys)
+        elif sql_keys is not None:
+            valid_keys = sql_keys
+        elif mongo_keys is not None:
+            valid_keys = mongo_keys
+            
         merged = {}
         for r in sql_res:
             key = r.get(self.merge_key)
-            merged[key] = r
+            if valid_keys is None or key in valid_keys:
+                merged[key] = r
+
         for r in mongo_res:
             key = r.get(self.merge_key)
-            if key not in merged:
-                merged[key] = {}
-            merged[key].update(r)
+            if valid_keys is None or key in valid_keys:
+                if key not in merged:
+                    merged[key] = {}
+                merged[key].update(r)
 
-        return list(merged.values())
+        # Drop skeleton-only rows: records that have only the merge key
+        # and no other real data (these are SQL-only rows with no Mongo match)
+        result = []
+        for row in merged.values():
+            non_key_fields = {k: v for k, v in row.items()
+                              if k != self.merge_key and v is not None and v != ""}
+            if non_key_fields:
+                result.append(row)
+        return result
 
     # =========================
     # UPDATE
@@ -529,9 +619,9 @@ class HybridQueryEngine:
                     {}
                 )[f] = v
 
-        # SQL update
-        with self.sql_conn:
-
+        # Ensure Atomicity + Isolation via BEGIN IMMEDIATE
+        self.sql_conn.execute("BEGIN IMMEDIATE")
+        try:
             cur = self.sql_conn.cursor()
 
             for table, row in sql_data.items():
@@ -550,18 +640,23 @@ class HybridQueryEngine:
                     list(row.values()) + values
                 )
 
-        # Mongo update
-        mongo_query = self._build_mongo_query(
-            filters,
-            conditions
-        )
-
-        for col, doc in mongo_data.items():
-
-            self.mongo_db[col].update_many(
-                mongo_query,
-                {"$set": doc}
+            # Mongo update
+            mongo_query = self._build_mongo_query(
+                filters,
+                conditions
             )
+
+            for col, doc in mongo_data.items():
+                self.mongo_db[col].update_many(
+                    mongo_query,
+                    {"$set": doc}
+                )
+
+            self.sql_conn.execute("COMMIT")
+        except Exception as e:
+            try: self.sql_conn.execute("ROLLBACK")
+            except: pass
+            raise e
 
     # =========================
     # DELETE
@@ -576,15 +671,15 @@ class HybridQueryEngine:
             conditions
         )
 
-        # SQL delete
         tables = {
             info["table"]
             for info in self.metadata.values()
             if info["backend"] == "sql"
         }
 
-        with self.sql_conn:
-
+        # Ensure Atomicity + Isolation via BEGIN IMMEDIATE
+        self.sql_conn.execute("BEGIN IMMEDIATE")
+        try:
             cur = self.sql_conn.cursor()
 
             for t in tables:
@@ -596,23 +691,28 @@ class HybridQueryEngine:
 
                 cur.execute(q, values)
 
-        # Mongo delete
-        mongo_query = self._build_mongo_query(
-            filters,
-            conditions
-        )
-
-        cols = {
-            info["collection"]
-            for info in self.metadata.values()
-            if info["backend"] == "mongo"
-        }
-
-        for c in cols:
-
-            self.mongo_db[c].delete_many(
-                mongo_query
+            # Mongo delete
+            mongo_query = self._build_mongo_query(
+                filters,
+                conditions
             )
+
+            cols = {
+                info["collection"]
+                for info in self.metadata.values()
+                if info["backend"] == "mongo"
+            }
+
+            for c in cols:
+                self.mongo_db[c].delete_many(
+                    mongo_query
+                )
+
+            self.sql_conn.execute("COMMIT")
+        except Exception as e:
+            try: self.sql_conn.execute("ROLLBACK")
+            except: pass
+            raise e
 
     def test_durability(self):
 
@@ -629,7 +729,7 @@ class HybridQueryEngine:
         }
 
         insert_result = self.execute(unified_query)
-        if insert_result["status"] != "insert successful":
+        if insert_result.get("status") != "ok":
             return {
                 "test": "Durability",
                 "passed": False,
@@ -652,17 +752,31 @@ class HybridQueryEngine:
                 "passed": False,
                 "reason": "Committed data not found after insert"
             }
-        else:
+            
+        # To truly test durability, we simulate a crash by spinning up a brand new engine
+        # and checking if the data is permanently physically persisted.
+        from sql_backend import get_connection
+        from mongo_backend import get_db
+        fresh_engine = type(self)(self.metadata, get_connection(), get_db())
+        fresh_read_result = fresh_engine.execute(query)
+        
+        if len(fresh_read_result) == 0:
             return {
                 "test": "Durability",
-                "passed": True,
-                "reason": "Data persisted correctly in SQL and Mongo after commit"
+                "passed": False,
+                "reason": "Data was lost after restarting database connections"
             }
+            
+        return {
+            "test": "Durability",
+            "passed": True,
+            "reason": "Data correctly persisted physically to disk across connections"
+        }
     
     def test_isolation(self):
         import threading
         import sqlite3
-        username = "ayush_iso"
+        username = f"ayush_iso_{datetime.now().timestamp()}"
         # Step 1 — insert initial record
         insert_query = {
             "operation": "insert",
@@ -674,7 +788,7 @@ class HybridQueryEngine:
             }
         }
         insert_result = self.execute(insert_query)
-        if insert_result["status"] != "insert successful":
+        if insert_result.get("status") != "ok":
             return {
                 "test": "Isolation",
                 "passed": False,
@@ -682,8 +796,10 @@ class HybridQueryEngine:
             }
         # Step 2 — concurrent updates using separate DB connections
         def update_spo2(new_value):
-            # create fresh engine instance to ensure new SQL connection
-            local_engine = type(self)(self.metadata, self.sql_conn, self.mongo_db)
+            # create fresh engine instance to ensure new SQL connection and true concurrency
+            from sql_backend import get_connection
+            from mongo_backend import get_db
+            local_engine = type(self)(self.metadata, get_connection(), get_db())
             update_query = {
                 "operation": "update",
                 "filters": {
@@ -741,7 +857,7 @@ class HybridQueryEngine:
         across SQL and Mongo.
         Record must remain mergeable using sys_ingested_at.
         """
-        username = "ayush_consistency"
+        username = f"ayush_consistency_{datetime.now().timestamp()}"
         # Step 1 — insert unified record
         insert_query = {
             "operation": "insert",
@@ -753,7 +869,7 @@ class HybridQueryEngine:
             }
         }
         insert_result = self.execute(insert_query)
-        if insert_result["status"] != "insert successful":
+        if insert_result.get("status") != "ok":
             return {
                 "test": "Consistency",
                 "passed": False,
@@ -820,9 +936,10 @@ class HybridQueryEngine:
         Artificial failure occurs during insert.
         SQL changes must rollback completely.
         """
-        username = "ayush_atomic_test_2"
+        username = f"ayush_atomic_test_{datetime.now().timestamp()}"
         insert_query = {
             "operation": "insert",
+            "__fail_mongo": True,
             "data": {
                 "username": username,
                 "spo2": 99,

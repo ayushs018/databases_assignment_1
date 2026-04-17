@@ -36,56 +36,6 @@
     "collection": "users",
     "parent": null
   },
-  "s": {
-    "backend": "sql",
-    "table": "USERS",
-    "parent": null
-  },
-  "y": {
-    "backend": "sql",
-    "table": "USERS",
-    "parent": null
-  },
-  "_": {
-    "backend": "sql",
-    "table": "USERS",
-    "parent": null
-  },
-  "i": {
-    "backend": "sql",
-    "table": "USERS",
-    "parent": null
-  },
-  "n": {
-    "backend": "sql",
-    "table": "USERS",
-    "parent": null
-  },
-  "g": {
-    "backend": "sql",
-    "table": "USERS",
-    "parent": null
-  },
-  "e": {
-    "backend": "sql",
-    "table": "USERS",
-    "parent": null
-  },
-  "t": {
-    "backend": "sql",
-    "table": "USERS",
-    "parent": null
-  },
-  "d": {
-    "backend": "sql",
-    "table": "USERS",
-    "parent": null
-  },
-  "a": {
-    "backend": "sql",
-    "table": "USERS",
-    "parent": null
-  },
   "phone": {
     "backend": "mongo",
     "collection": "users",
