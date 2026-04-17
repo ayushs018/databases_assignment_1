@@ -176,10 +176,20 @@ def api_create(entity):
         res = engine.execute({
             "operation": "insert",
             "data": payload,
+            "__trace": bool(request.args.get("trace") or payload.get("__trace"))
         })
     finally:
         sql_conn.close()
-    # You can extend this to return created ID(s) if you change insert() to return them
+
+    if isinstance(res, dict) and "__trace" in res:
+        out = {
+            "status": "ok",
+            "entity": entity,
+            "record_id": res["result"].get("record_id"),
+            "__trace": res["__trace"]
+        }
+        return jsonify(out), 201
+
     return jsonify({
         "status": "ok",
         "entity": entity,
@@ -195,13 +205,23 @@ def api_update(entity, record_id):
     filters = {"sys_ingested_at": record_id}
     engine, sql_conn = _new_engine()
     try:
-        engine.execute({
+        res = engine.execute({
             "operation": "update",
             "filters": filters,
             "data": payload,
+            "__trace": bool(request.args.get("trace") or payload.get("__trace"))
         })
     finally:
         sql_conn.close()
+
+    if isinstance(res, dict) and "__trace" in res:
+        return jsonify({
+            "status": "ok",
+            "entity": entity,
+            "record_id": record_id,
+            "__trace": res["__trace"]
+        })
+
     return jsonify({
         "status": "ok",
         "entity": entity,
@@ -251,6 +271,23 @@ def api_query():
         sql_conn.close()
 
     finished = datetime.now(timezone.utc)
+    
+    if isinstance(result, dict) and "__trace" in result:
+        serialized_res = _serialize(result["result"])
+        trace = result["__trace"]
+        _QUERY_HISTORY.append({
+            "ts": started.isoformat(),
+            "duration_ms": int((finished - started).total_seconds() * 1000),
+            "query": query,
+            "result_count": len(serialized_res) if isinstance(serialized_res, list) else None,
+        })
+        _QUERY_HISTORY[:] = _QUERY_HISTORY[-100:]
+        return jsonify({
+            "status": "ok",
+            "result": serialized_res,
+            "__trace": trace
+        })
+
     serialized = _serialize(result)
 
     _QUERY_HISTORY.append({

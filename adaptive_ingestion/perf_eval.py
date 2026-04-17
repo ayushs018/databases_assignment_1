@@ -412,14 +412,24 @@ def run_http(args) -> dict[str, Any]:
     base = args.base_url.rstrip("/")
     results_rows: list[dict[str, Any]] = []
 
+    # Metadata load overhead
+    meta_load_stats = measure_metadata_load(iterations=max(10, args.meta_iters))
+
     # Insert via HTTP
     latencies = []
+    route_ms = []
+    sql_ms = []
+    mongo_ms = []
+    commit_ms = []
     inserted_ids: list[str] = []
     t_batch0 = time.perf_counter()
     for _ in range(args.n_inserts):
         rec = build_synthetic_record(fields_all, rng, width=args.width)
+        # Add trace request
+        rec["__trace"] = True
         t0 = time.perf_counter()
         r = requests.post(f"{base}/api/data/any", json=rec, timeout=30)
+        dt = (time.perf_counter() - t0) * 1000
         if not r.ok:
             raise RuntimeError(f"Insert failed: HTTP {r.status_code} {r.text[:500]}")
         try:
@@ -427,9 +437,15 @@ def run_http(args) -> dict[str, Any]:
             rid = j.get("record_id")
             if rid:
                 inserted_ids.append(str(rid))
+            tr = j.get("__trace")
+            if tr:
+                route_ms.append(tr.get("route_ms", 0.0))
+                sql_ms.append(tr.get("sql_ms", 0.0))
+                mongo_ms.append(tr.get("mongo_ms", 0.0))
+                commit_ms.append(tr.get("commit_ms", 0.0))
         except Exception:
             pass
-        latencies.append((time.perf_counter() - t0) * 1000)
+        latencies.append(dt)
     t_batch_ms = (time.perf_counter() - t_batch0) * 1000
     stats = summarize_latencies_ms(latencies)
     results_rows.append({
@@ -437,6 +453,12 @@ def run_http(args) -> dict[str, Any]:
         "mode": "hybrid",
         **stats,
         "throughput_ops_sec": ops_per_sec(len(latencies), t_batch_ms),
+        "avg_route_ms": statistics.fmean(route_ms) if route_ms else None,
+        "avg_sql_ms": statistics.fmean(sql_ms) if sql_ms else None,
+        "avg_mongo_ms": statistics.fmean(mongo_ms) if mongo_ms else None,
+        "avg_commit_ms": statistics.fmean(commit_ms) if commit_ms else None,
+        "coord_overhead_ms_est": (stats["avg_ms"] - (statistics.fmean(sql_ms) if sql_ms else 0.0) - (statistics.fmean(mongo_ms) if mongo_ms else 0.0)) if stats["avg_ms"] is not None else None,
+        "metadata_load_avg_ms": meta_load_stats.get("avg_ms"),
     })
 
     # Query via HTTP
@@ -452,17 +474,17 @@ def run_http(args) -> dict[str, Any]:
             filters = {merge_key: rid}
         else:
             filters = {}
-        body = {"operation": "read", "fields": proj, "filters": filters}
+        body = {"operation": "read", "fields": proj, "filters": filters, "__trace": True}
         t0 = time.perf_counter()
         r = requests.post(f"{base}/api/query", json=body, timeout=30)
         if not r.ok:
             raise RuntimeError(f"Query failed: HTTP {r.status_code} {r.text[:500]}")
-        _ = r.json()
         q_lat.append((time.perf_counter() - t0) * 1000)
     results_rows.append({
         "experiment": "logical_query_latency_http",
         "mode": "hybrid",
         **summarize_latencies_ms(q_lat),
+        "metadata_load_avg_ms": meta_load_stats.get("avg_ms"),
     })
 
     out = {
@@ -475,6 +497,7 @@ def run_http(args) -> dict[str, Any]:
             "n_inserts": args.n_inserts,
             "n_queries": args.n_queries,
         },
+        "metadata_load_overhead": meta_load_stats,
         "results": results_rows,
     }
 
@@ -524,6 +547,9 @@ def run_compare_http(args) -> dict[str, Any]:
 
     base = args.base_url.rstrip("/")
     out_dir = args.out_dir
+
+    # Metadata load overhead
+    meta_load_stats = measure_metadata_load(iterations=max(10, args.meta_iters))
 
     # Choose representative fields for scenarios
     sql_pick = _pick_sql_field(meta, ["username", "email", "user_id", "device_model"])
@@ -663,6 +689,7 @@ def run_compare_http(args) -> dict[str, Any]:
         },
         "latency": latency_rows,
         "throughput": throughput_rows,
+        "metadata_load_overhead": meta_load_stats,
     }
 
     os.makedirs(out_dir, exist_ok=True)

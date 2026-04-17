@@ -1,5 +1,5 @@
 {
-  "ts": "2026-04-14T17:49:08.440855+00:00",
+  "ts": "2026-04-17T17:43:00.712034+00:00",
   "mode": "compare_http",
   "base_url": "http://127.0.0.1:5000",
   "config": {
@@ -20,67 +20,67 @@
       "scenario": "retrieve_user",
       "impl": "framework",
       "n": 200,
-      "avg_ms": 28.67318399978103,
-      "p50_ms": 31.054049999511335,
-      "p95_ms": 34.78170498929102,
-      "p99_ms": 37.07494700167442,
-      "min_ms": 10.53430000320077,
-      "max_ms": 42.673699994338676
+      "avg_ms": 27.50725049997527,
+      "p50_ms": 30.8252499999071,
+      "p95_ms": 34.75848000007318,
+      "p99_ms": 36.70447700033037,
+      "min_ms": 11.573800000405754,
+      "max_ms": 40.925700000116194
     },
     {
       "scenario": "retrieve_user",
       "impl": "direct",
       "n": 200,
-      "avg_ms": 0.2059260002715746,
-      "p50_ms": 0.16180000238819048,
-      "p95_ms": 0.2244200062705204,
-      "p99_ms": 0.3977900008612759,
-      "min_ms": 0.15870000061113387,
-      "max_ms": 6.650499999523163
+      "avg_ms": 0.23004499999842665,
+      "p50_ms": 0.19919999999729043,
+      "p95_ms": 0.3603950000979234,
+      "p99_ms": 0.6620370001928669,
+      "min_ms": 0.19459999975879327,
+      "max_ms": 1.2677999998231826
     },
     {
       "scenario": "access_nested",
       "impl": "framework",
       "n": 200,
-      "avg_ms": 28.49048800075252,
-      "p50_ms": 31.107050002901815,
-      "p95_ms": 34.89329500735039,
-      "p99_ms": 36.7890930044814,
-      "min_ms": 10.36240000394173,
-      "max_ms": 37.72560000652447
+      "avg_ms": 25.888606500020614,
+      "p50_ms": 30.720100000053208,
+      "p95_ms": 34.32902499989723,
+      "p99_ms": 36.566265999967975,
+      "min_ms": 10.194599999977072,
+      "max_ms": 38.10460000022431
     },
     {
       "scenario": "access_nested",
       "impl": "direct",
       "n": 200,
-      "avg_ms": 4.142939499870408,
-      "p50_ms": 4.1125000061583705,
-      "p95_ms": 4.947204994095955,
-      "p99_ms": 5.40278499451233,
-      "min_ms": 2.7633999998215586,
-      "max_ms": 25.560699999914505
+      "avg_ms": 4.849414500006333,
+      "p50_ms": 4.670199999736724,
+      "p95_ms": 5.914915000016663,
+      "p99_ms": 8.227152000035844,
+      "min_ms": 3.3462000001236447,
+      "max_ms": 24.92039999970075
     },
     {
       "scenario": "update_multi",
       "impl": "framework",
       "n": 200,
-      "avg_ms": 38.83410949965764,
-      "p50_ms": 41.15219999948749,
-      "p95_ms": 49.15433999485684,
-      "p99_ms": 51.4694149966817,
-      "min_ms": 21.173600005568005,
-      "max_ms": 58.593000008841045
+      "avg_ms": 36.76779050000732,
+      "p50_ms": 37.62785000003532,
+      "p95_ms": 48.35526999995636,
+      "p99_ms": 50.525434000137466,
+      "min_ms": 18.6399999997775,
+      "max_ms": 51.30959999996776
     },
     {
       "scenario": "update_multi",
       "impl": "direct",
       "n": 200,
-      "avg_ms": 6.138042999518802,
-      "p50_ms": 6.0721999980160035,
-      "p95_ms": 7.349740008066874,
-      "p99_ms": 7.798236003873166,
-      "min_ms": 4.485699988435954,
-      "max_ms": 12.74540000304114
+      "avg_ms": 6.736275999985537,
+      "p50_ms": 6.573549999984607,
+      "p95_ms": 8.256934999644727,
+      "p99_ms": 10.443608999721596,
+      "min_ms": 5.215499999849271,
+      "max_ms": 13.790900000003603
     }
   ],
   "throughput": [
@@ -88,145 +88,154 @@
       "scenario": "retrieve_user",
       "impl": "framework",
       "workload": 50,
-      "throughput_ops_sec": 34.607965466300456
+      "throughput_ops_sec": 35.79737141333851
     },
     {
       "scenario": "retrieve_user",
       "impl": "direct",
       "workload": 50,
-      "throughput_ops_sec": 5756.654694157824
+      "throughput_ops_sec": 4702.076437002366
     },
     {
       "scenario": "retrieve_user",
       "impl": "framework",
       "workload": 100,
-      "throughput_ops_sec": 34.69544649321504
+      "throughput_ops_sec": 37.197823942177436
     },
     {
       "scenario": "retrieve_user",
       "impl": "direct",
       "workload": 100,
-      "throughput_ops_sec": 3572.8321847482916
+      "throughput_ops_sec": 4586.4616823845345
     },
     {
       "scenario": "retrieve_user",
       "impl": "framework",
       "workload": 200,
-      "throughput_ops_sec": 35.0402594184086
+      "throughput_ops_sec": 38.08514009238172
     },
     {
       "scenario": "retrieve_user",
       "impl": "direct",
       "workload": 200,
-      "throughput_ops_sec": 3967.592701771506
+      "throughput_ops_sec": 4193.944782527499
     },
     {
       "scenario": "retrieve_user",
       "impl": "framework",
       "workload": 400,
-      "throughput_ops_sec": 35.38019652053789
+      "throughput_ops_sec": 37.1534743054419
     },
     {
       "scenario": "retrieve_user",
       "impl": "direct",
       "workload": 400,
-      "throughput_ops_sec": 4045.773885517549
+      "throughput_ops_sec": 4755.942847839365
     },
     {
       "scenario": "access_nested",
       "impl": "framework",
       "workload": 50,
-      "throughput_ops_sec": 35.80265946437518
+      "throughput_ops_sec": 34.704766206829476
     },
     {
       "scenario": "access_nested",
       "impl": "direct",
       "workload": 50,
-      "throughput_ops_sec": 187.34260878777383
+      "throughput_ops_sec": 225.49459985493957
     },
     {
       "scenario": "access_nested",
       "impl": "framework",
       "workload": 100,
-      "throughput_ops_sec": 34.07880724178034
+      "throughput_ops_sec": 37.356053583970635
     },
     {
       "scenario": "access_nested",
       "impl": "direct",
       "workload": 100,
-      "throughput_ops_sec": 193.492049703098
+      "throughput_ops_sec": 220.51139680088903
     },
     {
       "scenario": "access_nested",
       "impl": "framework",
       "workload": 200,
-      "throughput_ops_sec": 34.528284759409004
+      "throughput_ops_sec": 38.61707243394536
     },
     {
       "scenario": "access_nested",
       "impl": "direct",
       "workload": 200,
-      "throughput_ops_sec": 203.48970601419833
+      "throughput_ops_sec": 219.9553864489689
     },
     {
       "scenario": "access_nested",
       "impl": "framework",
       "workload": 400,
-      "throughput_ops_sec": 34.343299069012666
+      "throughput_ops_sec": 36.137327989706954
     },
     {
       "scenario": "access_nested",
       "impl": "direct",
       "workload": 400,
-      "throughput_ops_sec": 203.27242173540773
+      "throughput_ops_sec": 176.52376082638253
     },
     {
       "scenario": "update_multi",
       "impl": "framework",
       "workload": 50,
-      "throughput_ops_sec": 22.92448897999977
+      "throughput_ops_sec": 22.364275127997605
     },
     {
       "scenario": "update_multi",
       "impl": "direct",
       "workload": 50,
-      "throughput_ops_sec": 138.92203723003567
+      "throughput_ops_sec": 123.25954441799946
     },
     {
       "scenario": "update_multi",
       "impl": "framework",
       "workload": 100,
-      "throughput_ops_sec": 22.170461584618185
+      "throughput_ops_sec": 24.834919187794522
     },
     {
       "scenario": "update_multi",
       "impl": "direct",
       "workload": 100,
-      "throughput_ops_sec": 137.42991761158714
+      "throughput_ops_sec": 158.17841734582655
     },
     {
       "scenario": "update_multi",
       "impl": "framework",
       "workload": 200,
-      "throughput_ops_sec": 22.30358197199307
+      "throughput_ops_sec": 28.282513404180385
     },
     {
       "scenario": "update_multi",
       "impl": "direct",
       "workload": 200,
-      "throughput_ops_sec": 138.4145115980612
+      "throughput_ops_sec": 127.52305967606598
     },
     {
       "scenario": "update_multi",
       "impl": "framework",
       "workload": 400,
-      "throughput_ops_sec": 22.04810806783177
+      "throughput_ops_sec": 23.47058178502598
     },
     {
       "scenario": "update_multi",
       "impl": "direct",
       "workload": 400,
-      "throughput_ops_sec": 136.5112655404426
+      "throughput_ops_sec": 129.17822529204386
     }
-  ]
+  ],
+  "metadata_load_overhead": {
+    "n": 50,
+    "avg_ms": 0.3340239999943151,
+    "p50_ms": 0.3038499999092892,
+    "p95_ms": 0.5037149997860976,
+    "p99_ms": 0.6562659998598973,
+    "min_ms": 0.2809999996316037,
+    "max_ms": 0.6742000000485859
+  }
 }

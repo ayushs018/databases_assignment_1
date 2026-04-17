@@ -37,8 +37,8 @@ class HybridQueryEngine:
             return self.insert(query)
 
         elif op == "update":
-            self.update(query)
-            return {"status": "update successful"}
+            res = self.update(query)
+            return res
 
         elif op == "delete":
             self.delete(query)
@@ -143,10 +143,10 @@ class HybridQueryEngine:
             trace["commit_ms"] = (time.perf_counter() - t_commit0) * 1000
             trace["total_ms"] = (time.perf_counter() - t0) * 1000
             trace["record_id"] = sys_ingested_at
-            return {
+            return self._wrap_with_trace(query, {
                 "status": "ok",
                 "record_id": sys_ingested_at
-            }
+            }, trace)
         except Exception as e:
             # rollback SQL
             try: self.sql_conn.execute("ROLLBACK")
@@ -581,82 +581,58 @@ class HybridQueryEngine:
                 result.append(row)
         return result
 
-    # =========================
-    # UPDATE
-    # =========================
     def update(self, query):
-
+        trace = {}
+        t0 = time.perf_counter()
         filters = query.get("filters", {})
         conditions = query.get("conditions", [])
         data = query.get("data", {})
 
-        where_clause, values = self._build_where_clause(
-            filters,
-            conditions
-        )
+        where_clause, values = self._build_where_clause(filters, conditions)
 
         sql_data = {}
         mongo_data = {}
 
+        t_route0 = time.perf_counter()
         for f, v in data.items():
-
             info = self.metadata.get(f)
-
-            if not info:
-                continue
-
+            if not info: continue
             if info["backend"] == "sql":
-
-                sql_data.setdefault(
-                    info["table"],
-                    {}
-                )[f] = v
-
+                sql_data.setdefault(info["table"], {})[f] = v
             else:
-
-                mongo_data.setdefault(
-                    info["collection"],
-                    {}
-                )[f] = v
+                mongo_data.setdefault(info["collection"], {})[f] = v
+        trace["route_ms"] = (time.perf_counter() - t_route0) * 1000
 
         # Ensure Atomicity + Isolation via BEGIN IMMEDIATE
         self.sql_conn.execute("BEGIN IMMEDIATE")
         try:
+            t_sql0 = time.perf_counter()
             cur = self.sql_conn.cursor()
-
             for table, row in sql_data.items():
-
-                set_clause = ", ".join(
-                    [f"{k} = ?" for k in row]
-                )
-
+                set_clause = ", ".join([f"{k} = ?" for k in row])
                 q = f"UPDATE {table} SET {set_clause}"
-
                 if where_clause:
                     q += f" WHERE {where_clause}"
-
-                cur.execute(
-                    q,
-                    list(row.values()) + values
-                )
+                cur.execute(q, list(row.values()) + values)
+            trace["sql_ms"] = (time.perf_counter() - t_sql0) * 1000
 
             # Mongo update
-            mongo_query = self._build_mongo_query(
-                filters,
-                conditions
-            )
-
+            t_m0 = time.perf_counter()
+            mongo_query = self._build_mongo_query(filters, conditions)
             for col, doc in mongo_data.items():
-                self.mongo_db[col].update_many(
-                    mongo_query,
-                    {"$set": doc}
-                )
+                self.mongo_db[col].update_many(mongo_query, {"$set": doc})
+            trace["mongo_ms"] = (time.perf_counter() - t_m0) * 1000
 
+            t_commit0 = time.perf_counter()
             self.sql_conn.execute("COMMIT")
+            trace["commit_ms"] = (time.perf_counter() - t_commit0) * 1000
+            trace["total_ms"] = (time.perf_counter() - t0) * 1000
+            return self._wrap_with_trace(query, {"status": "update successful"}, trace)
         except Exception as e:
             try: self.sql_conn.execute("ROLLBACK")
             except: pass
-            raise e
+            trace["total_ms"] = (time.perf_counter() - t0) * 1000
+            return self._wrap_with_trace(query, {"status": "error", "message": str(e)}, trace)
 
     # =========================
     # DELETE
