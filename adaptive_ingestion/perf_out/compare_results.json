@@ -1,5 +1,5 @@
 {
-  "ts": "2026-04-17T17:43:00.712034+00:00",
+  "ts": "2026-04-17T18:04:31.641144+00:00",
   "mode": "compare_http",
   "base_url": "http://127.0.0.1:5000",
   "config": {
@@ -17,225 +17,225 @@
   },
   "latency": [
     {
-      "scenario": "retrieve_user",
+      "scenario": "sql_backend",
       "impl": "framework",
       "n": 200,
-      "avg_ms": 27.50725049997527,
-      "p50_ms": 30.8252499999071,
-      "p95_ms": 34.75848000007318,
-      "p99_ms": 36.70447700033037,
-      "min_ms": 11.573800000405754,
-      "max_ms": 40.925700000116194
+      "avg_ms": 27.36068449998129,
+      "p50_ms": 30.748500000299828,
+      "p95_ms": 35.35039000021243,
+      "p99_ms": 37.008737999449295,
+      "min_ms": 10.252200000650191,
+      "max_ms": 37.407200000416196
     },
     {
-      "scenario": "retrieve_user",
+      "scenario": "sql_backend",
       "impl": "direct",
       "n": 200,
-      "avg_ms": 0.23004499999842665,
-      "p50_ms": 0.19919999999729043,
-      "p95_ms": 0.3603950000979234,
-      "p99_ms": 0.6620370001928669,
-      "min_ms": 0.19459999975879327,
-      "max_ms": 1.2677999998231826
+      "avg_ms": 0.23741100001643645,
+      "p50_ms": 0.2128500004801026,
+      "p95_ms": 0.37368500043157654,
+      "p99_ms": 0.6298010001410146,
+      "min_ms": 0.20640000002458692,
+      "max_ms": 0.7637999997314182
     },
     {
-      "scenario": "access_nested",
+      "scenario": "mongo_backend",
       "impl": "framework",
       "n": 200,
-      "avg_ms": 25.888606500020614,
-      "p50_ms": 30.720100000053208,
-      "p95_ms": 34.32902499989723,
-      "p99_ms": 36.566265999967975,
-      "min_ms": 10.194599999977072,
-      "max_ms": 38.10460000022431
+      "avg_ms": 27.02194949998102,
+      "p50_ms": 30.802300000232208,
+      "p95_ms": 35.07640499988156,
+      "p99_ms": 37.728473999113696,
+      "min_ms": 11.010000000169384,
+      "max_ms": 43.58390000015788
     },
     {
-      "scenario": "access_nested",
+      "scenario": "mongo_backend",
       "impl": "direct",
       "n": 200,
-      "avg_ms": 4.849414500006333,
-      "p50_ms": 4.670199999736724,
-      "p95_ms": 5.914915000016663,
-      "p99_ms": 8.227152000035844,
-      "min_ms": 3.3462000001236447,
-      "max_ms": 24.92039999970075
+      "avg_ms": 4.720616499985226,
+      "p50_ms": 4.609550000168383,
+      "p95_ms": 5.575675000136471,
+      "p99_ms": 5.985952000391985,
+      "min_ms": 3.51669999963633,
+      "max_ms": 31.101699999453558
     },
     {
-      "scenario": "update_multi",
+      "scenario": "cross_backend",
       "impl": "framework",
       "n": 200,
-      "avg_ms": 36.76779050000732,
-      "p50_ms": 37.62785000003532,
-      "p95_ms": 48.35526999995636,
-      "p99_ms": 50.525434000137466,
-      "min_ms": 18.6399999997775,
-      "max_ms": 51.30959999996776
+      "avg_ms": 34.50559749997865,
+      "p50_ms": 33.15010000005714,
+      "p95_ms": 47.71065499949145,
+      "p99_ms": 48.44746300012957,
+      "min_ms": 15.150399999583897,
+      "max_ms": 48.987099999976635
     },
     {
-      "scenario": "update_multi",
+      "scenario": "cross_backend",
       "impl": "direct",
       "n": 200,
-      "avg_ms": 6.736275999985537,
-      "p50_ms": 6.573549999984607,
-      "p95_ms": 8.256934999644727,
-      "p99_ms": 10.443608999721596,
-      "min_ms": 5.215499999849271,
-      "max_ms": 13.790900000003603
+      "avg_ms": 6.740484500010098,
+      "p50_ms": 6.6273000002183835,
+      "p95_ms": 7.711130000279808,
+      "p99_ms": 8.512131999577832,
+      "min_ms": 5.4971999998087995,
+      "max_ms": 19.04819999981555
     }
   ],
   "throughput": [
     {
-      "scenario": "retrieve_user",
+      "scenario": "sql_backend",
       "impl": "framework",
       "workload": 50,
-      "throughput_ops_sec": 35.79737141333851
+      "throughput_ops_sec": 38.14908571136567
     },
     {
-      "scenario": "retrieve_user",
+      "scenario": "sql_backend",
       "impl": "direct",
       "workload": 50,
-      "throughput_ops_sec": 4702.076437002366
+      "throughput_ops_sec": 3146.6529053402637
     },
     {
-      "scenario": "retrieve_user",
+      "scenario": "sql_backend",
       "impl": "framework",
       "workload": 100,
-      "throughput_ops_sec": 37.197823942177436
+      "throughput_ops_sec": 35.43995514719524
     },
     {
-      "scenario": "retrieve_user",
+      "scenario": "sql_backend",
       "impl": "direct",
       "workload": 100,
-      "throughput_ops_sec": 4586.4616823845345
+      "throughput_ops_sec": 4024.744126775868
     },
     {
-      "scenario": "retrieve_user",
+      "scenario": "sql_backend",
       "impl": "framework",
       "workload": 200,
-      "throughput_ops_sec": 38.08514009238172
+      "throughput_ops_sec": 36.88182737947711
     },
     {
-      "scenario": "retrieve_user",
+      "scenario": "sql_backend",
       "impl": "direct",
       "workload": 200,
-      "throughput_ops_sec": 4193.944782527499
+      "throughput_ops_sec": 3230.553280699154
     },
     {
-      "scenario": "retrieve_user",
+      "scenario": "sql_backend",
       "impl": "framework",
       "workload": 400,
-      "throughput_ops_sec": 37.1534743054419
+      "throughput_ops_sec": 36.96636487757699
     },
     {
-      "scenario": "retrieve_user",
+      "scenario": "sql_backend",
       "impl": "direct",
       "workload": 400,
-      "throughput_ops_sec": 4755.942847839365
+      "throughput_ops_sec": 3184.289986940113
     },
     {
-      "scenario": "access_nested",
+      "scenario": "mongo_backend",
       "impl": "framework",
       "workload": 50,
-      "throughput_ops_sec": 34.704766206829476
+      "throughput_ops_sec": 36.913213712372574
     },
     {
-      "scenario": "access_nested",
+      "scenario": "mongo_backend",
       "impl": "direct",
       "workload": 50,
-      "throughput_ops_sec": 225.49459985493957
+      "throughput_ops_sec": 183.89289489347968
     },
     {
-      "scenario": "access_nested",
+      "scenario": "mongo_backend",
       "impl": "framework",
       "workload": 100,
-      "throughput_ops_sec": 37.356053583970635
+      "throughput_ops_sec": 39.263173157786866
     },
     {
-      "scenario": "access_nested",
+      "scenario": "mongo_backend",
       "impl": "direct",
       "workload": 100,
-      "throughput_ops_sec": 220.51139680088903
+      "throughput_ops_sec": 156.25759314242035
     },
     {
-      "scenario": "access_nested",
+      "scenario": "mongo_backend",
       "impl": "framework",
       "workload": 200,
-      "throughput_ops_sec": 38.61707243394536
+      "throughput_ops_sec": 38.009692395544604
     },
     {
-      "scenario": "access_nested",
+      "scenario": "mongo_backend",
       "impl": "direct",
       "workload": 200,
-      "throughput_ops_sec": 219.9553864489689
+      "throughput_ops_sec": 165.78908975156077
     },
     {
-      "scenario": "access_nested",
+      "scenario": "mongo_backend",
       "impl": "framework",
       "workload": 400,
-      "throughput_ops_sec": 36.137327989706954
+      "throughput_ops_sec": 38.24664271209099
     },
     {
-      "scenario": "access_nested",
+      "scenario": "mongo_backend",
       "impl": "direct",
       "workload": 400,
-      "throughput_ops_sec": 176.52376082638253
+      "throughput_ops_sec": 175.74519477485904
     },
     {
-      "scenario": "update_multi",
+      "scenario": "cross_backend",
       "impl": "framework",
       "workload": 50,
-      "throughput_ops_sec": 22.364275127997605
+      "throughput_ops_sec": 23.972495684469433
     },
     {
-      "scenario": "update_multi",
+      "scenario": "cross_backend",
       "impl": "direct",
       "workload": 50,
-      "throughput_ops_sec": 123.25954441799946
+      "throughput_ops_sec": 119.44796882325424
     },
     {
-      "scenario": "update_multi",
+      "scenario": "cross_backend",
       "impl": "framework",
       "workload": 100,
-      "throughput_ops_sec": 24.834919187794522
+      "throughput_ops_sec": 24.83441159381641
     },
     {
-      "scenario": "update_multi",
+      "scenario": "cross_backend",
       "impl": "direct",
       "workload": 100,
-      "throughput_ops_sec": 158.17841734582655
+      "throughput_ops_sec": 118.86737930832136
     },
     {
-      "scenario": "update_multi",
+      "scenario": "cross_backend",
       "impl": "framework",
       "workload": 200,
-      "throughput_ops_sec": 28.282513404180385
+      "throughput_ops_sec": 24.378048040675736
     },
     {
-      "scenario": "update_multi",
+      "scenario": "cross_backend",
       "impl": "direct",
       "workload": 200,
-      "throughput_ops_sec": 127.52305967606598
+      "throughput_ops_sec": 119.83610495272696
     },
     {
-      "scenario": "update_multi",
+      "scenario": "cross_backend",
       "impl": "framework",
       "workload": 400,
-      "throughput_ops_sec": 23.47058178502598
+      "throughput_ops_sec": 23.488084342141168
     },
     {
-      "scenario": "update_multi",
+      "scenario": "cross_backend",
       "impl": "direct",
       "workload": 400,
-      "throughput_ops_sec": 129.17822529204386
+      "throughput_ops_sec": 120.3324074456646
     }
   ],
   "metadata_load_overhead": {
     "n": 50,
-    "avg_ms": 0.3340239999943151,
-    "p50_ms": 0.3038499999092892,
-    "p95_ms": 0.5037149997860976,
-    "p99_ms": 0.6562659998598973,
-    "min_ms": 0.2809999996316037,
-    "max_ms": 0.6742000000485859
+    "avg_ms": 0.31797600006029825,
+    "p50_ms": 0.29755000014120014,
+    "p95_ms": 0.44431000014810706,
+    "p99_ms": 0.4863709999881394,
+    "min_ms": 0.27320000026520574,
+    "max_ms": 0.49229999967792537
   }
 }

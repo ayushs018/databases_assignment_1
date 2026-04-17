@@ -639,9 +639,9 @@ def run_compare_http(args) -> dict[str, Any]:
     # --- Latency comparisons (fixed n) ---
     n = args.n_queries
     for scenario, fw_fn, dr_fn in [
-        ("retrieve_user", framework_read_user, direct_sql_read_user),
-        ("access_nested", framework_read_nested, direct_mongo_read_nested),
-        ("update_multi", framework_update_multi, direct_update_multi),
+        ("sql_backend", framework_read_user, direct_sql_read_user),
+        ("mongo_backend", framework_read_nested, direct_mongo_read_nested),
+        ("cross_backend", framework_update_multi, direct_update_multi),
     ]:
         fw_stats = measure_latency(fw_fn, n)
         dr_stats = measure_latency(dr_fn, n)
@@ -651,9 +651,9 @@ def run_compare_http(args) -> dict[str, Any]:
     # --- Throughput under increasing workload (ops/sec) ---
     workloads = [50, 100, 200, 400]
     for scenario, fw_fn, dr_fn in [
-        ("retrieve_user", framework_read_user, direct_sql_read_user),
-        ("access_nested", framework_read_nested, direct_mongo_read_nested),
-        ("update_multi", framework_update_multi, direct_update_multi),
+        ("sql_backend", framework_read_user, direct_sql_read_user),
+        ("mongo_backend", framework_read_nested, direct_mongo_read_nested),
+        ("cross_backend", framework_update_multi, direct_update_multi),
     ]:
         for w in workloads:
             # framework
