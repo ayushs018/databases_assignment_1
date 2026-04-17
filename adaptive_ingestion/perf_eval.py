@@ -186,6 +186,65 @@ def write_csv(path: str, rows: list[dict[str, Any]]):
         w.writerows(rows)
 
 
+def try_plot(out_dir: str, latency_rows: list[dict[str, Any]], throughput_rows: list[dict[str, Any]]):
+    """
+    Create required visualizations if matplotlib is available:
+    - Bar chart comparing avg latency across scenarios
+    - Line chart showing throughput under increasing workload
+    """
+    try:
+        import matplotlib.pyplot as plt  # type: ignore
+    except Exception:
+        return
+
+    os.makedirs(out_dir, exist_ok=True)
+
+    # --- Bar chart: avg latency ---
+    # Expect rows like: {scenario, impl, avg_ms}
+    scenarios = sorted({r["scenario"] for r in latency_rows})
+    impls = ["framework", "direct"]
+    x = list(range(len(scenarios)))
+    width = 0.38
+
+    def avg_for(scn: str, impl: str):
+        for r in latency_rows:
+            if r["scenario"] == scn and r["impl"] == impl:
+                return r.get("avg_ms") or 0.0
+        return 0.0
+
+    fw = [avg_for(s, "framework") for s in scenarios]
+    dr = [avg_for(s, "direct") for s in scenarios]
+
+    plt.figure(figsize=(10, 4))
+    plt.bar([i - width / 2 for i in x], fw, width=width, label="Framework (logical)")
+    plt.bar([i + width / 2 for i in x], dr, width=width, label="Direct DB")
+    plt.xticks(x, scenarios, rotation=20, ha="right")
+    plt.ylabel("Average latency (ms)")
+    plt.title("Comparative latency: logical framework vs direct DB")
+    plt.tight_layout()
+    plt.legend()
+    plt.savefig(os.path.join(out_dir, "compare_latency_bar.png"), dpi=160)
+    plt.close()
+
+    # --- Line chart: throughput vs workload ---
+    # Expect rows like: {scenario, impl, workload, throughput_ops_sec}
+    plt.figure(figsize=(10, 4))
+    for scn in sorted({r["scenario"] for r in throughput_rows}):
+        for impl in impls:
+            pts = [r for r in throughput_rows if r["scenario"] == scn and r["impl"] == impl]
+            pts.sort(key=lambda r: r["workload"])
+            xs = [p["workload"] for p in pts]
+            ys = [p.get("throughput_ops_sec") or 0.0 for p in pts]
+            plt.plot(xs, ys, marker="o", label=f"{scn} · {impl}")
+    plt.xlabel("Workload size (ops)")
+    plt.ylabel("Throughput (ops/sec)")
+    plt.title("Throughput under increasing workload")
+    plt.tight_layout()
+    plt.legend(fontsize=8, ncol=2)
+    plt.savefig(os.path.join(out_dir, "compare_throughput_line.png"), dpi=160)
+    plt.close()
+
+
 def run_direct_engine(args) -> dict[str, Any]:
     rng = random.Random(args.seed)
     meta = load_query_metadata()
@@ -428,9 +487,202 @@ def run_http(args) -> dict[str, Any]:
     return out
 
 
+def _pick_sql_field(meta: dict[str, dict], preferred: list[str]) -> tuple[str, str] | None:
+    for f in preferred:
+        info = meta.get(f)
+        if info and info.get("backend") == "sql" and info.get("table"):
+            return f, info["table"]
+    for f, info in meta.items():
+        if info.get("backend") == "sql" and info.get("table"):
+            return f, info["table"]
+    return None
+
+
+def _pick_mongo_field(meta: dict[str, dict], preferred: list[str]) -> tuple[str, str] | None:
+    for f in preferred:
+        info = meta.get(f)
+        if info and info.get("backend") == "mongo" and info.get("collection"):
+            return f, info["collection"]
+    for f, info in meta.items():
+        if info.get("backend") == "mongo" and info.get("collection"):
+            return f, info["collection"]
+    return None
+
+
+def run_compare_http(args) -> dict[str, Any]:
+    """
+    Comparative analysis: logical framework (HTTP) vs direct DB access.
+    Produces:
+    - latency comparisons (bar chart)
+    - throughput vs workload (line chart)
+    - CSV/JSON summaries
+    """
+    rng = random.Random(args.seed)
+    meta = load_query_metadata()
+    fields_all = list(meta.keys())
+    merge_key = "sys_ingested_at"
+
+    base = args.base_url.rstrip("/")
+    out_dir = args.out_dir
+
+    # Choose representative fields for scenarios
+    sql_pick = _pick_sql_field(meta, ["username", "email", "user_id", "device_model"])
+    mongo_pick = _pick_mongo_field(meta, ["payload", "context", "details", "tags", "weather"])
+    if not sql_pick or not mongo_pick:
+        raise RuntimeError("Could not infer representative SQL/Mongo fields from query_metadata.json")
+    sql_field, sql_table = sql_pick
+    mongo_field, mongo_collection = mongo_pick
+
+    # Seed data via framework inserts and keep record_ids
+    inserted_ids: list[str] = []
+    for _ in range(max(50, args.warmup)):
+        rec = build_synthetic_record(fields_all, rng, width=args.width)
+        r = requests.post(f"{base}/api/data/any", json=rec, timeout=30)
+        if not r.ok:
+            raise RuntimeError(f"Warmup insert failed: HTTP {r.status_code} {r.text[:500]}")
+        try:
+            j = r.json()
+            if j.get("record_id"):
+                inserted_ids.append(str(j["record_id"]))
+        except Exception:
+            pass
+    if not inserted_ids:
+        raise RuntimeError("No record_ids collected from inserts; cannot run comparisons.")
+
+    # Direct DB handles
+    sql_conn = get_connection()
+    mongo_db = get_db()
+
+    latency_rows: list[dict[str, Any]] = []
+    throughput_rows: list[dict[str, Any]] = []
+
+    def framework_read_user(rid: str):
+        body = {"operation": "read", "fields": [merge_key, sql_field], "filters": {merge_key: rid}}
+        r = requests.post(f"{base}/api/query", json=body, timeout=30)
+        if not r.ok:
+            raise RuntimeError(f"Framework read failed: HTTP {r.status_code} {r.text[:200]}")
+        return r.json()
+
+    def direct_sql_read_user(rid: str):
+        cur = sql_conn.cursor()
+        q = f"SELECT {merge_key}, {sql_field} FROM {sql_table} WHERE {merge_key} = ? LIMIT 1"
+        cur.execute(q, [rid])
+        _ = cur.fetchone()
+        cur.close()
+
+    def framework_read_nested(rid: str):
+        body = {"operation": "read", "fields": [merge_key, mongo_field], "filters": {merge_key: rid}}
+        r = requests.post(f"{base}/api/query", json=body, timeout=30)
+        if not r.ok:
+            raise RuntimeError(f"Framework read failed: HTTP {r.status_code} {r.text[:200]}")
+        return r.json()
+
+    def direct_mongo_read_nested(rid: str):
+        _ = mongo_db[mongo_collection].find_one({merge_key: rid}, {mongo_field: 1, merge_key: 1, "_id": 0})
+
+    def framework_update_multi(rid: str):
+        body = {
+            "operation": "update",
+            "filters": {merge_key: rid},
+            "data": {sql_field: random_value_for_field(sql_field, rng), mongo_field: random_value_for_field(mongo_field, rng)},
+        }
+        r = requests.post(f"{base}/api/query", json=body, timeout=30)
+        if not r.ok:
+            raise RuntimeError(f"Framework update failed: HTTP {r.status_code} {r.text[:200]}")
+        return r.json()
+
+    def direct_update_multi(rid: str):
+        # SQL update
+        cur = sql_conn.cursor()
+        q = f"UPDATE {sql_table} SET {sql_field} = ? WHERE {merge_key} = ?"
+        cur.execute(q, [str(random_value_for_field(sql_field, rng)), rid])
+        sql_conn.commit()
+        cur.close()
+        # Mongo update
+        mongo_db[mongo_collection].update_many({merge_key: rid}, {"$set": {mongo_field: random_value_for_field(mongo_field, rng)}})
+
+    def measure_latency(fn, n: int) -> dict[str, Any]:
+        vals = []
+        for _ in range(n):
+            rid = rng.choice(inserted_ids)
+            t0 = time.perf_counter()
+            fn(rid)
+            vals.append((time.perf_counter() - t0) * 1000)
+        return summarize_latencies_ms(vals)
+
+    # --- Latency comparisons (fixed n) ---
+    n = args.n_queries
+    for scenario, fw_fn, dr_fn in [
+        ("retrieve_user", framework_read_user, direct_sql_read_user),
+        ("access_nested", framework_read_nested, direct_mongo_read_nested),
+        ("update_multi", framework_update_multi, direct_update_multi),
+    ]:
+        fw_stats = measure_latency(fw_fn, n)
+        dr_stats = measure_latency(dr_fn, n)
+        latency_rows.append({"scenario": scenario, "impl": "framework", **fw_stats})
+        latency_rows.append({"scenario": scenario, "impl": "direct", **dr_stats})
+
+    # --- Throughput under increasing workload (ops/sec) ---
+    workloads = [50, 100, 200, 400]
+    for scenario, fw_fn, dr_fn in [
+        ("retrieve_user", framework_read_user, direct_sql_read_user),
+        ("access_nested", framework_read_nested, direct_mongo_read_nested),
+        ("update_multi", framework_update_multi, direct_update_multi),
+    ]:
+        for w in workloads:
+            # framework
+            t0 = time.perf_counter()
+            for _ in range(w):
+                fw_fn(rng.choice(inserted_ids))
+            fw_ms = (time.perf_counter() - t0) * 1000
+            throughput_rows.append({"scenario": scenario, "impl": "framework", "workload": w, "throughput_ops_sec": ops_per_sec(w, fw_ms)})
+
+            # direct
+            t1 = time.perf_counter()
+            for _ in range(w):
+                dr_fn(rng.choice(inserted_ids))
+            dr_ms = (time.perf_counter() - t1) * 1000
+            throughput_rows.append({"scenario": scenario, "impl": "direct", "workload": w, "throughput_ops_sec": ops_per_sec(w, dr_ms)})
+
+    out = {
+        "ts": now_iso(),
+        "mode": "compare_http",
+        "base_url": base,
+        "config": {
+            "seed": args.seed,
+            "width": args.width,
+            "n_ops": args.n_queries,
+            "warmup": args.warmup,
+        },
+        "chosen_fields": {
+            "merge_key": merge_key,
+            "sql_field": sql_field,
+            "sql_table": sql_table,
+            "mongo_field": mongo_field,
+            "mongo_collection": mongo_collection,
+        },
+        "latency": latency_rows,
+        "throughput": throughput_rows,
+    }
+
+    os.makedirs(out_dir, exist_ok=True)
+    with open(os.path.join(out_dir, "compare_results.json"), "w", encoding="utf-8") as f:
+        json.dump(out, f, indent=2)
+    write_csv(os.path.join(out_dir, "compare_latency.csv"), latency_rows)
+    write_csv(os.path.join(out_dir, "compare_throughput.csv"), throughput_rows)
+    try_plot(out_dir, latency_rows, throughput_rows)
+
+    try:
+        sql_conn.close()
+    except Exception:
+        pass
+
+    return out
+
+
 def main():
     p = argparse.ArgumentParser(description="Performance evaluation for hybrid logical DB framework")
-    p.add_argument("--mode", choices=["direct", "http"], default="direct")
+    p.add_argument("--mode", choices=["direct", "http", "compare"], default="direct")
     p.add_argument("--out-dir", default="perf_out")
     p.add_argument("--seed", type=int, default=7)
     p.add_argument("--width", type=int, default=25, help="How many logical fields per synthetic record")
@@ -446,11 +698,18 @@ def main():
         print("Wrote:", os.path.join(args.out_dir, "perf_results.json"))
         print("Wrote:", os.path.join(args.out_dir, "perf_results.csv"))
         print("Summary rows:", len(out.get("results", [])))
-    else:
+    elif args.mode == "http":
         out = run_http(args)
         print("Wrote:", os.path.join(args.out_dir, "perf_results_http.json"))
         print("Wrote:", os.path.join(args.out_dir, "perf_results_http.csv"))
         print("Summary rows:", len(out.get("results", [])))
+    else:
+        out = run_compare_http(args)
+        print("Wrote:", os.path.join(args.out_dir, "compare_results.json"))
+        print("Wrote:", os.path.join(args.out_dir, "compare_latency.csv"))
+        print("Wrote:", os.path.join(args.out_dir, "compare_throughput.csv"))
+        # Plots are optional if matplotlib is installed
+        print("Summary rows:", len(out.get("latency", [])) + len(out.get("throughput", [])))
 
 
 if __name__ == "__main__":
