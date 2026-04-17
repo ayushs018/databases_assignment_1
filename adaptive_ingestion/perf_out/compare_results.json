@@ -1,0 +1,232 @@
+{
+  "ts": "2026-04-14T17:49:08.440855+00:00",
+  "mode": "compare_http",
+  "base_url": "http://127.0.0.1:5000",
+  "config": {
+    "seed": 7,
+    "width": 25,
+    "n_ops": 200,
+    "warmup": 25
+  },
+  "chosen_fields": {
+    "merge_key": "sys_ingested_at",
+    "sql_field": "username",
+    "sql_table": "USERS",
+    "mongo_field": "timestamp",
+    "mongo_collection": "users"
+  },
+  "latency": [
+    {
+      "scenario": "retrieve_user",
+      "impl": "framework",
+      "n": 200,
+      "avg_ms": 28.67318399978103,
+      "p50_ms": 31.054049999511335,
+      "p95_ms": 34.78170498929102,
+      "p99_ms": 37.07494700167442,
+      "min_ms": 10.53430000320077,
+      "max_ms": 42.673699994338676
+    },
+    {
+      "scenario": "retrieve_user",
+      "impl": "direct",
+      "n": 200,
+      "avg_ms": 0.2059260002715746,
+      "p50_ms": 0.16180000238819048,
+      "p95_ms": 0.2244200062705204,
+      "p99_ms": 0.3977900008612759,
+      "min_ms": 0.15870000061113387,
+      "max_ms": 6.650499999523163
+    },
+    {
+      "scenario": "access_nested",
+      "impl": "framework",
+      "n": 200,
+      "avg_ms": 28.49048800075252,
+      "p50_ms": 31.107050002901815,
+      "p95_ms": 34.89329500735039,
+      "p99_ms": 36.7890930044814,
+      "min_ms": 10.36240000394173,
+      "max_ms": 37.72560000652447
+    },
+    {
+      "scenario": "access_nested",
+      "impl": "direct",
+      "n": 200,
+      "avg_ms": 4.142939499870408,
+      "p50_ms": 4.1125000061583705,
+      "p95_ms": 4.947204994095955,
+      "p99_ms": 5.40278499451233,
+      "min_ms": 2.7633999998215586,
+      "max_ms": 25.560699999914505
+    },
+    {
+      "scenario": "update_multi",
+      "impl": "framework",
+      "n": 200,
+      "avg_ms": 38.83410949965764,
+      "p50_ms": 41.15219999948749,
+      "p95_ms": 49.15433999485684,
+      "p99_ms": 51.4694149966817,
+      "min_ms": 21.173600005568005,
+      "max_ms": 58.593000008841045
+    },
+    {
+      "scenario": "update_multi",
+      "impl": "direct",
+      "n": 200,
+      "avg_ms": 6.138042999518802,
+      "p50_ms": 6.0721999980160035,
+      "p95_ms": 7.349740008066874,
+      "p99_ms": 7.798236003873166,
+      "min_ms": 4.485699988435954,
+      "max_ms": 12.74540000304114
+    }
+  ],
+  "throughput": [
+    {
+      "scenario": "retrieve_user",
+      "impl": "framework",
+      "workload": 50,
+      "throughput_ops_sec": 34.607965466300456
+    },
+    {
+      "scenario": "retrieve_user",
+      "impl": "direct",
+      "workload": 50,
+      "throughput_ops_sec": 5756.654694157824
+    },
+    {
+      "scenario": "retrieve_user",
+      "impl": "framework",
+      "workload": 100,
+      "throughput_ops_sec": 34.69544649321504
+    },
+    {
+      "scenario": "retrieve_user",
+      "impl": "direct",
+      "workload": 100,
+      "throughput_ops_sec": 3572.8321847482916
+    },
+    {
+      "scenario": "retrieve_user",
+      "impl": "framework",
+      "workload": 200,
+      "throughput_ops_sec": 35.0402594184086
+    },
+    {
+      "scenario": "retrieve_user",
+      "impl": "direct",
+      "workload": 200,
+      "throughput_ops_sec": 3967.592701771506
+    },
+    {
+      "scenario": "retrieve_user",
+      "impl": "framework",
+      "workload": 400,
+      "throughput_ops_sec": 35.38019652053789
+    },
+    {
+      "scenario": "retrieve_user",
+      "impl": "direct",
+      "workload": 400,
+      "throughput_ops_sec": 4045.773885517549
+    },
+    {
+      "scenario": "access_nested",
+      "impl": "framework",
+      "workload": 50,
+      "throughput_ops_sec": 35.80265946437518
+    },
+    {
+      "scenario": "access_nested",
+      "impl": "direct",
+      "workload": 50,
+      "throughput_ops_sec": 187.34260878777383
+    },
+    {
+      "scenario": "access_nested",
+      "impl": "framework",
+      "workload": 100,
+      "throughput_ops_sec": 34.07880724178034
+    },
+    {
+      "scenario": "access_nested",
+      "impl": "direct",
+      "workload": 100,
+      "throughput_ops_sec": 193.492049703098
+    },
+    {
+      "scenario": "access_nested",
+      "impl": "framework",
+      "workload": 200,
+      "throughput_ops_sec": 34.528284759409004
+    },
+    {
+      "scenario": "access_nested",
+      "impl": "direct",
+      "workload": 200,
+      "throughput_ops_sec": 203.48970601419833
+    },
+    {
+      "scenario": "access_nested",
+      "impl": "framework",
+      "workload": 400,
+      "throughput_ops_sec": 34.343299069012666
+    },
+    {
+      "scenario": "access_nested",
+      "impl": "direct",
+      "workload": 400,
+      "throughput_ops_sec": 203.27242173540773
+    },
+    {
+      "scenario": "update_multi",
+      "impl": "framework",
+      "workload": 50,
+      "throughput_ops_sec": 22.92448897999977
+    },
+    {
+      "scenario": "update_multi",
+      "impl": "direct",
+      "workload": 50,
+      "throughput_ops_sec": 138.92203723003567
+    },
+    {
+      "scenario": "update_multi",
+      "impl": "framework",
+      "workload": 100,
+      "throughput_ops_sec": 22.170461584618185
+    },
+    {
+      "scenario": "update_multi",
+      "impl": "direct",
+      "workload": 100,
+      "throughput_ops_sec": 137.42991761158714
+    },
+    {
+      "scenario": "update_multi",
+      "impl": "framework",
+      "workload": 200,
+      "throughput_ops_sec": 22.30358197199307
+    },
+    {
+      "scenario": "update_multi",
+      "impl": "direct",
+      "workload": 200,
+      "throughput_ops_sec": 138.4145115980612
+    },
+    {
+      "scenario": "update_multi",
+      "impl": "framework",
+      "workload": 400,
+      "throughput_ops_sec": 22.04810806783177
+    },
+    {
+      "scenario": "update_multi",
+      "impl": "direct",
+      "workload": 400,
+      "throughput_ops_sec": 136.5112655404426
+    }
+  ]
+}
